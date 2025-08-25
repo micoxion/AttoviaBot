@@ -1,0 +1,15 @@
+{
+  "name": "attoviabot",
+  "version": "1.0.0",
+  "description": "A wordcounter bot for the Attovia discord",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "SirOxion",
+  "license": "ISC",
+  "dependencies": {
+    "discord.js": "^14.22.1",
+    "dotenv": "^17.2.1"
+  }
+}
