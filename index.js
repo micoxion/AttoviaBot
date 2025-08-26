@@ -2,9 +2,26 @@
 const fs = require('node:fs')
 const path = require('node:path')
 const { Client, Collection, Events, GatewayIntentBits, MessageFlags } = require('discord.js'); 
+const { getAllWriters, addWriter, updateWordCount } = require('./database/writers.js');
+const { hasMessageBeenCounted, recordMessageTracked } = require('./database/messagesCounted.js');
+const { channel } = require('node:diagnostics_channel');
+
+//const { App } = require("./api/index.js")
+
 //const { token } = require('./config.json')
 require('dotenv').config(); 
 
+
+
+/*App.listen(4000, ()=> {
+    console.log("Running port 4000...")
+})*/
+getAllWriters().then((allWriters) => {
+    console.log("All writers: ", allWriters)
+})
+.catch((e) => {
+    console.log(e)
+})
 
 // Create a new Discord client with message intent 
 const client = new Client({ 
@@ -65,7 +82,7 @@ client.on(Events.InteractionCreate, async interaction => {
 })
 
 // Listen and respond to messages 
-client.on('messageCreate', message => { 
+client.on('messageCreate', async message => { 
 
   // Ignore messages from bots 
   if (message.author.bot) return; 
@@ -75,16 +92,44 @@ client.on('messageCreate', message => {
     message.reply('Hi there! 👋 I am your friendly bot.'); 
   } 
 
-  if (message.content.startsWith("!ab")) {
-    const messageSplit = message.content.substring(3).split("/");
-    const messageId = messageSplit[messageSplit.length - 1]
-    const channel = message.channel
-    channel.messages.fetch(messageId)
-    .then(fetchedMessage => {
-        let charCount = fetchedMessage.content.length
-        let wordCount = fetchedMessage.content.split(" ").length
-        message.reply("That's " + charCount + " characters! And " + wordCount + " words!")
-        console.log(fetchedMessage)
+//   if (message.content.startsWith("!ab count ")) {
+//     const messageSplit = message.content.substring(10).split("/");
+//     const messageId = messageSplit[messageSplit.length - 1]
+//     const channel = message.channel
+//     let fetchedMessage = await channel.messages.fetch(messageId)
+//     let charCount = fetchedMessage.content.length
+//     let wordCount = fetchedMessage.content.split(" ").length
+//     //message.reply("That's " + charCount + " characters! And " + wordCount + " words!")
+//     console.log(message.author.id, " ", fetchedMessage.author.id)
+//     let alreadyCounted = await hasMessageBeenCounted(fetchedMessage.id)
+//     if (message.author.id == fetchedMessage.author.id && !alreadyCounted) {
+//         await recordMessageTracked(fetchedMessage.id)
+//         let newWordCount = await updateWordCount(message.author.id, wordCount)
+//         message.reply(wordCount + " words added to your total! Your new wordcount is: " + newWordCount)       
+//     }
+//     else if (message.author.id != fetchedMessage.author.id) {
+//         message.reply("Hey that's not your message! Please only request counts of your own writing :)")
+//     } 
+//     else {
+//         message.reply("Looks like that message's content has already been counted!")
+//     }
+//   }
+
+  if (message.content.startsWith("!ab add ")) {
+    const userId = message.content.substring(8)
+    client.users.fetch(userId)
+    .then(fetchedUser => {
+        fetchedUser;
+        let writer = {}
+        writer.userId = userId
+        writer.username = fetchedUser.username
+        writer.streak = 0
+        writer.wordCount = 0
+        writer.lastTimeWrote = Math.floor(new Date().getTime() / 1000)
+        addWriter(writer).then(() => {
+            message.reply("Writer added succesfully!")
+        })
+    .catch(console.error)
     })
     .catch(console.error)
   }
