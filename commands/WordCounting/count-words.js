@@ -23,7 +23,8 @@ module.exports = {
         let alreadyCounted = await hasMessageBeenCounted(fetchedMessage.id)
         if (interaction.user.id == fetchedMessage.author.id && !alreadyCounted) {
             await recordMessageTracked(fetchedMessage.id)
-            let newWordCount = await updateWordCount(interaction.user.id, wordCount)
+            let newWordCount = await updateWordCount(interaction.user.id, wordCount, interaction.user.username)
+            await fetchedMessage.react("✅")
             await interaction.reply(wordCount + " words added to your total! Your new wordcount is: " + newWordCount)       
         }
         else if (interaction.user.id != fetchedMessage.author.id) {

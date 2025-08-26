@@ -30,7 +30,7 @@ writerSchema.methods.getStreak = function getStreak() {
 
 const Writer = mongoose.model('Writer', writerSchema, "writers");
 
-exports.addWriter = async function(writerData) {
+async function addWriter(writerData) {
     //TODO: Data checking
     //const newWriter = writerData;
 
@@ -38,15 +38,34 @@ exports.addWriter = async function(writerData) {
     const newWriter = new Writer({
         userId: writerData.userId,
         username: writerData.username,
-        streak: 0,
-        wordCount: 0,
-        lastTimeWrote: new Date().getTime() / 1000 //convert to epoch
+        streak: writerData.streak || 0,
+        wordCount: writerData.wordCount || 0,
+        lastTimeWrote: writerData.lastTimeWrote || null //new Date().getTime() / 1000 //convert to epoch
     });
     await newWriter.save();
+    return newWriter
 }
 
-exports.getWriterByUserId = async function(userId) {
-    let writer = await Writer.find({userId: userId});
+async function checkWriter(writerData) {
+    const result = await Writer.findOne({userId: writerData.userId})
+    if (result == null) {
+        console.log("adding writer")
+        let newWriter = await addWriter({
+            userId: writerData.userId,
+            username: writerData.username,
+            streak: writerData.streak || 0,
+            wordCount: writerData.wordCount || 0,
+            lastTimeWrote: writerData.lastTimeWrote || null
+        })
+        return newWriter
+    }
+    return null
+}
+
+exports.getWriterByUserId = async function(userId, username) {
+    await checkWriter({userId: userId, username: username})
+    let writer = await Writer.findOne({userId: userId});
+    console.log("WRITER: ", writer)
     return writer;
 }
 
@@ -62,7 +81,8 @@ exports.getAllWriters = async function() {
     return allWriters;
 }
 
-exports.updateWordCount = async function(userId, words) {
+exports.updateWordCount = async function(userId, words, username) {
+    let newWriter = await checkWriter({userId: userId, username: username})
     const result = await Writer.updateOne({userId: userId}, {$inc: {wordCount: words}})
     const updatedWordCount = await Writer.findOne({userId: userId})
     return updatedWordCount.wordCount
