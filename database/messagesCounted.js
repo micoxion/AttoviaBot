@@ -1,4 +1,5 @@
 const { MongoClient } = require('mongodb')
+const { logToFile } = require('../utility/logger.js')
 
 require('dotenv').config(); 
 
@@ -19,14 +20,15 @@ const db = mongoClient.db("WordCount");
 const messagesCountedCollection = db.collection("messagesCounted");
 
 exports.hasMessageBeenCounted = async function(messageId) {
-    let message = await messagesCountedCollection.findOne({messageId: messageId})
-    console.log(message)
+    let message = await messagesCountedCollection.findOne({messageId: messageId});
     if (message == null) {
         return false;
     }
-    return true
+    logToFile("Message was already counted: " + messageId);
+    return true;
 }
 
 exports.recordMessageTracked = async function(messageId) {
-    await messagesCountedCollection.insertOne({messageId: messageId})
+    await messagesCountedCollection.insertOne({messageId: messageId});
+    logToFile("Message " + messageId + " successfully tracked");
 }

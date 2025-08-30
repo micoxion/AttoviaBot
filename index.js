@@ -1,14 +1,19 @@
 // Import required modules 
 const fs = require('node:fs')
 const path = require('node:path')
-const { Client, Collection, Events, GatewayIntentBits, MessageFlags, ThreadManager } = require('discord.js'); 
+const { Client, Collection, Events, GatewayIntentBits, MessageFlags, ThreadManager, ChannelType } = require('discord.js'); 
 const { channel } = require('node:diagnostics_channel');
 const { countMessageWords } = require('./textCommands/count-words.js')
 const { intialize } = require('./textCommands/intialize.js')
+const { BTForumId, SWForumId } = require('./config.json')
 
 //const { App } = require("./api/index.js")
 
-//const { token } = require('./config.json')
+const { BTTags, SWTags } = require('./config.json');
+const { updateWordCount, updateStreak } = require('./database/writers.js');
+const { countWords } = require('./utility/word-counter.js');
+const { logToFile } = require('./utility/logger.js');
+const { recordMessageTracked } = require('./database/messagesCounted.js');
 require('dotenv').config(); 
 
 
@@ -58,28 +63,69 @@ client.once('ready', () => {
 }); 
 
 client.on(Events.InteractionCreate, async interaction => {
-    if (!interaction.isChatInputCommand()) return;
+  if (!interaction.isChatInputCommand()) return;
 
-    const command = interaction.client.commands.get(interaction.commandName);
+  const command = interaction.client.commands.get(interaction.commandName);
 
-    if (!command) {
-        console.error(`No command matching ${interaction.commandName} was found.`);
-		return;
+  if (!command) {
+    console.error(`No command matching ${interaction.commandName} was found.`);
+    return;
+  }
+
+  try {
+      await command.execute(interaction);
+  } catch (error) {
+    console.error(error);
+    if (interaction.replied || interaction.deferred) {
+      await interaction.followUp({ content: 'There was an error while executing this command!', flags: MessageFlags.Ephemeral });
+    } else {
+      await interaction.reply({ content: 'There was an error while executing this command!', flags: MessageFlags.Ephemeral });
     }
+  }
 
-    try {
-        await command.execute(interaction);
-    } catch (error) {
-        console.error(error);
-		if (interaction.replied || interaction.deferred) {
-			await interaction.followUp({ content: 'There was an error while executing this command!', flags: MessageFlags.Ephemeral });
-		} else {
-			await interaction.reply({ content: 'There was an error while executing this command!', flags: MessageFlags.Ephemeral });
-		}
+  //console.log(interaction);
+});
+
+client.on('threadCreate', async thread => {
+  if (!thread.parent || thread.parent.type != ChannelType.GuildForum) {
+    return;
+  }
+  if (thread.parent.id === BTForumId && !thread.appliedTags.includes(BTTags.PromptSuggestion) && !thread.appliedTags.includes(BTTags.MetaDiscussion)) {
+    const messages = await thread.messages.fetch({limit: 100});
+    while (messages.length < 1) {
+      messages = await thread.messages.fetch({limit: 100})
     }
-
-    console.log(interaction);
-})
+    let message = messages.at(-1);
+    let wordCount = countWords(message.content)
+    logToFile("Tracking created Build Together post: " + thread.name + " | Message: " + message.id)
+    let newWordCount = await updateWordCount(message.author.id, wordCount, message.author.username)
+    logToFile("Updated word count for " + message.author.username)
+    await recordMessageTracked(message.id)
+    logToFile("Message successfully tracked")
+    await message.react("✅");
+    logToFile(`${message.author.username} : ${message.author.id} | ${thread.name}\n
+            Message ID: ${message.id} | Wordcount = ${wordCount}
+                \n${message.content}`)
+    let reply = await updateStreak(message.author.id, message)
+    thread.send(wordCount + " words added to your total! Your new wordcount is: " + newWordCount + reply)
+  }
+  if (thread.parent.id === SWForumId && !thread.appliedTags.includes(SWTags.MetaDiscussion)) {
+    const messages = await thread.messages.fetch({limit: 100});
+    let message = messages.at(-1);
+    let wordCount = countWords(message.content)
+    logToFile("Tracking created Share Writing post: " + thread.name + " | Message: " + message.id)
+    let newWordCount = await updateWordCount(message.author.id, wordCount, message.author.username)
+    logToFile("Updated word count for " + message.author.username)
+    await recordMessageTracked(message.id)
+    logToFile("Message successfully tracked")
+    await message.react("✅");
+    logToFile(`${message.author.username} : ${message.author.id} | ${thread.name}\n
+            Message ID: ${message.id} | Wordcount = ${wordCount}
+                \n${message.content}`)
+    let reply = await updateStreak(message.author.id, message)
+    thread.send(wordCount + " words added to your total! Your new wordcount is: " + newWordCount + reply)
+  }
+});
 
 // Listen and respond to messages 
 client.on('messageCreate', async message => { 

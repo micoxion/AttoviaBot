@@ -1,8 +1,10 @@
 const { countWords } = require('../utility/word-counter.js')
-const { updateWordCount } = require('../database/writers.js');
+const { updateWordCount, updateStreak } = require('../database/writers.js');
 const { hasMessageBeenCounted, recordMessageTracked } = require('../database/messagesCounted.js')
+const { logToFile } = require('../utility/logger.js');
 
 exports.countMessageWords = async function(message) {
+    logToFile("Attempting to count words in message");
     if (!message.reference) {
         await message.reply("Please make sure to reply to a message you wrote that you wish to count the words in!");
         return;
@@ -19,8 +21,10 @@ exports.countMessageWords = async function(message) {
     }
     let wordCount = countWords(fetchedMessage.content)
     await recordMessageTracked(fetchedMessage.id)
-    let newWordCount = await updateWordCount(message.author.id, wordCount)
+    let newWordCount = await updateWordCount(message.author.id, wordCount, message.author.username)
+    let messageAddition = await updateStreak(message.author.id, fetchedMessage)
     await fetchedMessage.react("✅")
-    await message.reply(wordCount + " words added to your total! Your new wordcount is: " + newWordCount)
+    await message.reply(wordCount + " words added to your total! Your new wordcount is: " + newWordCount + messageAddition)
+    logToFile("Counted words in message: " + fetchedMessage.id)
     return;
 }

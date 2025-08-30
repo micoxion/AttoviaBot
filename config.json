@@ -2,9 +2,12 @@
     "clientId" : "1409333913641549887",
     "guildId" : "1232395395129282591",
     "BTTags" : { 
-        "PromptSuggestion" : "1390172706057748550" 
+        "PromptSuggestion" : "1390172706057748550",
+        "MetaDiscussion" : "1390764673321795714"
     },
     "SWTags" : {
         "MetaDiscussion" : "1403472654324863057"
-    }
+    },
+    "BTForumId" : "1390165892947640482",
+    "SWForumId" : "1403469524673499227"
 }

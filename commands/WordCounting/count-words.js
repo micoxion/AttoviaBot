@@ -1,5 +1,5 @@
 const { SlashCommandBuilder } = require('discord.js')
-const { updateWordCount } = require("../../database/writers.js")
+const { updateWordCount, updateStreak } = require("../../database/writers.js")
 const { hasMessageBeenCounted, recordMessageTracked } = require("../../database/messagesCounted.js")
 
 module.exports = {
@@ -19,13 +19,14 @@ module.exports = {
         let fetchedMessage = await channel.messages.fetch(messageId)
         let wordCount = fetchedMessage.content.split(" ").length
         //message.reply("That's " + charCount + " characters! And " + wordCount + " words!")
-        console.log(interaction.user.id, " ", fetchedMessage.author.id)
+        //console.log(interaction.user.id, " ", fetchedMessage.author.id)
         let alreadyCounted = await hasMessageBeenCounted(fetchedMessage.id)
         if (interaction.user.id == fetchedMessage.author.id && !alreadyCounted) {
             await recordMessageTracked(fetchedMessage.id)
             let newWordCount = await updateWordCount(interaction.user.id, wordCount, interaction.user.username)
+            let messageAddition = await updateStreak(interaction.user.id, fetchedMessage)
             await fetchedMessage.react("✅")
-            await interaction.reply(wordCount + " words added to your total! Your new wordcount is: " + newWordCount)       
+            await interaction.reply(wordCount + " words added to your total! Your new wordcount is: " + newWordCount + messageAddition)       
         }
         else if (interaction.user.id != fetchedMessage.author.id) {
             await interaction.reply("Hey that's not your message! Please only request counts of your own writing :)")
