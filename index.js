@@ -93,6 +93,19 @@ client.on(Events.InteractionCreate, async interaction => {
   //console.log(interaction);
 });
 
+async function trackWords(thread, message, wordCountToAdd) {
+  let newWordCount = await updateWordCount(message.author.id, wordCountToAdd, message.author.username)
+  logToFile("Updated word count for " + message.author.username)
+  await recordMessageTracked(message.id)
+  logToFile("Message successfully tracked")
+  await message.react("✅");
+  logToFile(`${message.author.username} : ${message.author.id} | ${thread.name}\n
+          Message ID: ${message.id} | Wordcount = ${wordCountToAdd}
+              \n${message.content}`)
+  let reply = await updateStreak(message.author.id, message)
+  await thread.send(wordCountToAdd + " words added to your total! Your new wordcount is: " + newWordCount + reply)
+}
+
 client.on('threadCreate', async thread => {
   if (!thread.parent || thread.parent.type != ChannelType.GuildForum) {
     return;
@@ -115,28 +128,32 @@ client.on('threadCreate', async thread => {
         wordCountTotal += countWords(ret.data.text);
       }
       logToFile("Tracking build Together image post: " + thread.name + " | Message: " + message.id);
-      let newWordCount = await updateWordCount(message.author.id, wordCountTotal, message.author.username)
-      logToFile("Updated word count for " + message.author.username)
-      await recordMessageTracked(message.id)
-      logToFile("Message successfully tracked")
-      await message.react("✅");
-      logToFile(`${message.author.username} : ${message.author.id} | ${thread.name}\n
-              Message ID: ${message.id} | Wordcount = ${wordCountTotal}
-                  \n${message.content}`)
+      trackWords(thread, message, wordCountTotal)
+      // let newWordCount = await updateWordCount(message.author.id, wordCountTotal, message.author.username)
+      // logToFile("Updated word count for " + message.author.username)
+      // await recordMessageTracked(message.id)
+      // logToFile("Message successfully tracked")
+      // await message.react("✅");
+      // logToFile(`${message.author.username} : ${message.author.id} | ${thread.name}\n
+      //         Message ID: ${message.id} | Wordcount = ${wordCountTotal}
+      //             \n${message.content}`)
+      // let reply = await updateStreak(message.author.id, message)
+      // await thread.send(wordCountTotal + " words added to your total! Your new wordcount is: " + newWordCount + reply)
       return
     }
     let wordCount = countWords(message.content)
     logToFile("Tracking created Build Together post: " + thread.name + " | Message: " + message.id)
-    let newWordCount = await updateWordCount(message.author.id, wordCount, message.author.username)
-    logToFile("Updated word count for " + message.author.username)
-    await recordMessageTracked(message.id)
-    logToFile("Message successfully tracked")
-    await message.react("✅");
-    logToFile(`${message.author.username} : ${message.author.id} | ${thread.name}\n
-            Message ID: ${message.id} | Wordcount = ${wordCount}
-                \n${message.content}`)
-    let reply = await updateStreak(message.author.id, message)
-    await thread.send(wordCount + " words added to your total! Your new wordcount is: " + newWordCount + reply)
+    trackWords(thread, message, wordCount)
+    // let newWordCount = await updateWordCount(message.author.id, wordCount, message.author.username)
+    // logToFile("Updated word count for " + message.author.username)
+    // await recordMessageTracked(message.id)
+    // logToFile("Message successfully tracked")
+    // await message.react("✅");
+    // logToFile(`${message.author.username} : ${message.author.id} | ${thread.name}\n
+    //         Message ID: ${message.id} | Wordcount = ${wordCount}
+    //             \n${message.content}`)
+    // let reply = await updateStreak(message.author.id, message)
+    // await thread.send(wordCount + " words added to your total! Your new wordcount is: " + newWordCount + reply)
   }
   if (thread.parent.id === SWForumId && !thread.appliedTags.includes(SWTags.MetaDiscussion)) {
     const messages = await thread.messages.fetch({limit: 100});
@@ -148,16 +165,17 @@ client.on('threadCreate', async thread => {
     let message = messages.at(-1);
     let wordCount = countWords(message.content)
     logToFile("Tracking created Share Writing post: " + thread.name + " | Message: " + message.id)
-    let newWordCount = await updateWordCount(message.author.id, wordCount, message.author.username)
-    logToFile("Updated word count for " + message.author.username)
-    await recordMessageTracked(message.id)
-    logToFile("Message successfully tracked")
-    await message.react("✅");
-    logToFile(`${message.author.username} : ${message.author.id} | ${thread.name}\n
-            Message ID: ${message.id} | Wordcount = ${wordCount}
-                \n${message.content}`)
-    let reply = await updateStreak(message.author.id, message)
-    thread.send(wordCount + " words added to your total! Your new wordcount is: " + newWordCount + reply)
+    trackWords(thread, message, wordCount)
+    // let newWordCount = await updateWordCount(message.author.id, wordCount, message.author.username)
+    // logToFile("Updated word count for " + message.author.username)
+    // await recordMessageTracked(message.id)
+    // logToFile("Message successfully tracked")
+    // await message.react("✅");
+    // logToFile(`${message.author.username} : ${message.author.id} | ${thread.name}\n
+    //         Message ID: ${message.id} | Wordcount = ${wordCount}
+    //             \n${message.content}`)
+    // let reply = await updateStreak(message.author.id, message)
+    // thread.send(wordCount + " words added to your total! Your new wordcount is: " + newWordCount + reply)
   }
 });
 
