@@ -15,6 +15,10 @@ module.exports = {
             writerOption = interaction.user
         }
         let writer = await getWriterByUserId(writerOption.id, writerOption.username)
+        let writeTime = "N/A"
+        if (writer.lastTimeWrote) {
+            writeTime = "<t:" + Math.floor(writer.lastTimeWrote.getTime() / 1000).toString() + ">"
+        }
         let embed = new EmbedBuilder()
             .setColor(0xc57bf3)
             .setTitle(writerOption.username + '\'s Stats')
@@ -25,7 +29,7 @@ module.exports = {
                 //{ name: '\u200B', value: '\u200B' },
                 { name: 'Current Streak: ', value: writer.streak.toString() },
                 { name: "Longest Streak: ", value: writer.longestStreak.toString() || "0" },
-                { name: "Last time you wrote: ", value: writer.lastTimeWrote || "N/A"}
+                { name: "Last time you wrote: ", value: writeTime}
             )
         console.log(writer, " ", writerOption.id)
         await interaction.reply({embeds: [embed]})

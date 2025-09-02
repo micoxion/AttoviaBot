@@ -22,24 +22,10 @@ const writerSchema = new mongoose.Schema({
         }
     },
     wordCount: Number,
-    lastTimeWrote: { 
-        type: Date, 
-        get: (d) => {
-            if (d == null) {
-                return null 
-            } else {
-              new Date(d * 1000)  
-            } 
-        },
-        set: (d) => {
-            if (d != null) {
-                d.getTime() / 1000                
-            }
-        }
-    }
+    lastTimeWrote: Date
 });
 
-writerSchema.methods.getStreak = function getStreak() {
+/*writerSchema.methods.getStreak = function getStreak() {
     let output = "";
     if (this.streak > 0) {
         output = this.username + " has a writing streak of " + this.streak + " day(s).";
@@ -48,7 +34,7 @@ writerSchema.methods.getStreak = function getStreak() {
         output = this.username + " does not currently have a streak!";
     }
     return output;
-}
+}*/
 
 const Writer = mongoose.model('Writer', writerSchema, "writers");
 
@@ -62,7 +48,7 @@ async function addWriter(writerData) {
         username: writerData.username,
         streak: writerData.streak || 0,
         wordCount: writerData.wordCount || 0,
-        lastTimeWrote: writerData.lastTimeWrote || null //new Date().getTime() / 1000 //convert to epoch
+        lastTimeWrote: writerData.lastTimeWrote || new Date(0) //new Date().getTime() / 1000 //convert to epoch
     });
     await newWriter.save();
     return newWriter;
@@ -78,7 +64,7 @@ async function checkWriter(writerData) {
             username: writerData.username,
             streak: writerData.streak || 0,
             wordCount: writerData.wordCount || 0,
-            lastTimeWrote: writerData.lastTimeWrote || null
+            lastTimeWrote: writerData.lastTimeWrote || new Date(0)
         })
         return newWriter
     }

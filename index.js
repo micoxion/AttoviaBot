@@ -8,7 +8,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { Client, Collection, Events, GatewayIntentBits, MessageFlags, ThreadManager, ChannelType } = require('discord.js'); 
 const { channel } = require('node:diagnostics_channel');
-const { countMessageWords } = require('./textCommands/count-words.js')
+const { countMessageWords, countAttachmentWords, countRepliedMessageWords } = require('./textCommands/count-words.js')
 const { intialize } = require('./textCommands/intialize.js')
 const { BTForumId, SWForumId } = require('./config.json')
 
@@ -65,7 +65,7 @@ for (let i = 0; i < commandFolders.length; i++) {
     }
 }
 // Bot is ready 
-client.once('ready', () => { 
+client.once('clientReady', () => { 
   console.log(`🤖 Logged in as ${client.user.tag}`); 
 }); 
 
@@ -111,11 +111,12 @@ client.on('threadCreate', async thread => {
     return;
   }
   if (thread.parent.id === BTForumId && !thread.appliedTags.includes(BTTags.PromptSuggestion) && !thread.appliedTags.includes(BTTags.MetaDiscussion)) {
+    //must wait to ensure the forum post's starter message is properly available in the API
     await new Promise(resolve => setTimeout(resolve, 1000))
     const message = await thread.fetchStarterMessage() //messages.values().toArray()[0];
     const attachments = message.attachments
     console.log("Attachments: ", attachments)
-    if (attachments.size >= 1) {
+    if (attachments.size >= 1 && thread.appliedTags.includes(BTTags.Screenshot)) {
       let wordCountTotal = 0
       for (const [id, attachment] of attachments) {
         console.log("Attachment: ", attachment)
@@ -129,53 +130,43 @@ client.on('threadCreate', async thread => {
       }
       logToFile("Tracking build Together image post: " + thread.name + " | Message: " + message.id);
       trackWords(thread, message, wordCountTotal)
-      // let newWordCount = await updateWordCount(message.author.id, wordCountTotal, message.author.username)
-      // logToFile("Updated word count for " + message.author.username)
-      // await recordMessageTracked(message.id)
-      // logToFile("Message successfully tracked")
-      // await message.react("✅");
-      // logToFile(`${message.author.username} : ${message.author.id} | ${thread.name}\n
-      //         Message ID: ${message.id} | Wordcount = ${wordCountTotal}
-      //             \n${message.content}`)
-      // let reply = await updateStreak(message.author.id, message)
-      // await thread.send(wordCountTotal + " words added to your total! Your new wordcount is: " + newWordCount + reply)
+      return
+    } else if (message.content == undefined || message.content == "") {
+      await thread.send("I saw no words to count, if you supplied a screenshot with some writing make sure you use the Screenshot tag!");
       return
     }
     let wordCount = countWords(message.content)
     logToFile("Tracking created Build Together post: " + thread.name + " | Message: " + message.id)
     trackWords(thread, message, wordCount)
-    // let newWordCount = await updateWordCount(message.author.id, wordCount, message.author.username)
-    // logToFile("Updated word count for " + message.author.username)
-    // await recordMessageTracked(message.id)
-    // logToFile("Message successfully tracked")
-    // await message.react("✅");
-    // logToFile(`${message.author.username} : ${message.author.id} | ${thread.name}\n
-    //         Message ID: ${message.id} | Wordcount = ${wordCount}
-    //             \n${message.content}`)
-    // let reply = await updateStreak(message.author.id, message)
-    // await thread.send(wordCount + " words added to your total! Your new wordcount is: " + newWordCount + reply)
   }
   if (thread.parent.id === SWForumId && !thread.appliedTags.includes(SWTags.MetaDiscussion)) {
-    const messages = await thread.messages.fetch({limit: 100});
-    if (messages.length < 1 && attachments.length >= 1) {
-      logToFile("An image was posted by " + thread.author.username)
-      await thread.send("We are working on supporting images with tessaract soon but for now a manual word count command is in the works!");
+    await new Promise(resolve => setTimeout(resolve, 1000))
+    const message = await thread.fetchStarterMessage() //messages.values().toArray()[0];
+    const attachments = message.attachments
+    console.log("Attachments: ", attachments)
+    if (attachments.size >= 1 && thread.appliedTags.includes(SWTags.Screenshot)) {
+      let wordCountTotal = 0
+      for (const [id, attachment] of attachments) {
+        console.log("Attachment: ", attachment)
+        logToFile("An image was posted by " + message.author.username);
+        //await thread.send("We are working on supporting images with tessaract soon but for now a manual word count command is in the works!");
+        const worker = await createWorker('eng');
+        console.log("Attachment url: " + attachment.url)
+        const ret = await worker.recognize(attachment.url);
+        logToFile("Tesseract read attachment as: " + ret.data.text);
+        wordCountTotal += countWords(ret.data.text);
+      }
+      logToFile("Tracking build Together image post: " + thread.name + " | Message: " + message.id);
+      trackWords(thread, message, wordCountTotal)
+      return
+    } else if (message.content == undefined || message.content == "") {
+      await thread.send("I saw no words to count, if you supplied a screenshot with some writing make sure you use the Screenshot tag!");
       return
     }
-    let message = messages.at(-1);
+    
     let wordCount = countWords(message.content)
     logToFile("Tracking created Share Writing post: " + thread.name + " | Message: " + message.id)
     trackWords(thread, message, wordCount)
-    // let newWordCount = await updateWordCount(message.author.id, wordCount, message.author.username)
-    // logToFile("Updated word count for " + message.author.username)
-    // await recordMessageTracked(message.id)
-    // logToFile("Message successfully tracked")
-    // await message.react("✅");
-    // logToFile(`${message.author.username} : ${message.author.id} | ${thread.name}\n
-    //         Message ID: ${message.id} | Wordcount = ${wordCount}
-    //             \n${message.content}`)
-    // let reply = await updateStreak(message.author.id, message)
-    // thread.send(wordCount + " words added to your total! Your new wordcount is: " + newWordCount + reply)
   }
 });
 
@@ -191,8 +182,12 @@ client.on('messageCreate', async message => {
     return;
   } 
 
+  if (message.content.startsWith("!ab attachments")) {
+    await countAttachmentWords(message)
+  }
+
   if (message.content.startsWith("!ab count")) {
-    await countMessageWords(message)
+    await countRepliedMessageWords(message)
   }
 
   if (message.content.startsWith("!ab init")) {
