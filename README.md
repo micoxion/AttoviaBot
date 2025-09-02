@@ -7,7 +7,6 @@ A word counter and potential utility bot for the Attovia discord!
 Counts the words of the message being replied to. You must be the author of the message being replied to
 #### !ab attachments
 Counts the words in the attachments of the message being replied to. You must be the author of the message being replied to
----
 ## Slash Commands
 #### /countwords
 Counts the words in the linked message. Requires a full message link as a parameter.
