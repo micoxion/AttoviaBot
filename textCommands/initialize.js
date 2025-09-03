@@ -27,7 +27,7 @@ async function trackMessage(messages) {
     total++;
 }
 
-exports.intialize = async function(client) {
+exports.initialize = async function(client) {
     total = 0
     const guild = client.guilds.cache.get(guildId)
     const buildTogetherForum = await guild.channels.fetch("1390165892947640482")

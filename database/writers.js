@@ -47,6 +47,7 @@ async function addWriter(writerData) {
         userId: writerData.userId,
         username: writerData.username,
         streak: writerData.streak || 0,
+        longestStreak: writerData.longestStreak || 0,
         wordCount: writerData.wordCount || 0,
         lastTimeWrote: writerData.lastTimeWrote || new Date(0) //new Date().getTime() / 1000 //convert to epoch
     });
@@ -132,25 +133,7 @@ exports.updateStreak = async function(userId, message) {
         await currentWriter.save();
         return "\nYou have started a new streak of " + currentWriter.streak + " day!";
     }
-    //a write time was recorded at some point but the message itself is not from today
-    // if (lastTimeWrote != null && !isToday) {
-    //     if (currentWriter.lastTimeWrote < messageDate) {
-    //         currentWriter.lastTimeWrote = messageDate;
-    //         await currentWriter.save();
-    //     }
-    //     return;
-    // }
-    // //a write time was recorded, the message is from today, and the lastTimeWrote is NOT from today but no more than 1 day ago
-    // else if (lastTimeWrote != null && isToday && ((messageDate - lastTimeWrote) / (36e5 * 24)) == 1) {
-    //     currentWriter.streak++;
-    //     currentWriter.lastTimeWrote = messageDate;
-    //     if (currentWriter.streak > currentWriter.longestStreak) {
-    //         currentWriter.longestStreak = currentWriter.streak;
-    //     }
-    //     await currentWriter.save();
-    //     return;
-    // }
-    //else if (currentWriter.lastTimeWrote != null && isToday && (messageDate - currentWriter.lastTimeWrote / 36e5) > 0)
+    return "";
 }
 
 exports.updateWordCount = async function(userId, words, username) {

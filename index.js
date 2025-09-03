@@ -4,17 +4,21 @@ const require = createRequire(import.meta.url)
 import { createWorker } from 'tesseract.js';
 import { dirname } from 'path';
 import { fileURLToPath } from 'node:url';
+import { config } from 'dotenv';
+import { getRandomPrompt } from './database/prompts.js';
 const fs = require('node:fs');
 const path = require('node:path');
-const { Client, Collection, Events, GatewayIntentBits, MessageFlags, ThreadManager, ChannelType } = require('discord.js'); 
+const { Client, Collection, Events, GatewayIntentBits, MessageFlags, ThreadManager, ChannelType, EmbedBuilder } = require('discord.js'); 
 const { channel } = require('node:diagnostics_channel');
+const { handleDailyPromptMessage } = require('./messageListeners/daily-prompt.js')
 const { countMessageWords, countAttachmentWords, countRepliedMessageWords } = require('./textCommands/count-words.js')
-const { intialize } = require('./textCommands/intialize.js')
-const { BTForumId, SWForumId } = require('./config.json')
+const { initialize } = require('./textCommands/initialize.js')
+const { initializePrompts } = require('./textCommands/initializePrompts.js')
+const { BTForumId, SWForumId, dailyPromptChannelId } = require('./config.json')
 
 //const { App } = require("./api/index.js")
 
-const { BTTags, SWTags } = require('./config.json');
+const { BTTags, SWTags, siroxionId } = require('./config.json');
 const { updateWordCount, updateStreak } = require('./database/writers.js');
 const { countWords } = require('./utility/word-counter.js');
 const { logToFile } = require('./utility/logger.js');
@@ -190,9 +194,31 @@ client.on('messageCreate', async message => {
     await countRepliedMessageWords(message)
   }
 
-  if (message.content.startsWith("!ab init")) {
-    await intialize(client)
+  if (message.content.startsWith("!ab init") && message.author.id == siroxionId) {
+    await initialize(client)
   }
+
+  if (message.content.startsWith("!ab prompts init") && message.author.id == siroxionId) {
+    await initializePrompts(client)
+  }
+
+  if (message.content.startsWith("!ab random prompt")) {
+    let prompt = await getRandomPrompt()
+    let embed = new EmbedBuilder()
+            .setColor(0xc57bf3)
+            .setTitle("Build Together Day " + prompt.day.toString())
+            .setAuthor({ name: 'AttoviaBot', iconURL: interaction.client.user.displayAvatarURL() })
+            .setDescription("> " + prompt.prompt + "\n" + prompt.source + "\n### Date\n" + "<t:" + Math.floor(prompt.date.getTime() / 1000).toString() + ":D>")
+            .setFields(
+                { name: "Original Message", value: prompt.originalMessage }
+            )
+    await message.reply({embeds: [embed]})
+  }
+
+  if (message.channelId === dailyPromptChannelId) {
+    await handleDailyPromptMessage(message)
+  }
+
 });   
 
 
