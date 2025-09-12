@@ -107,7 +107,11 @@ async function trackWords(thread, message, wordCountToAdd) {
           Message ID: ${message.id} | Wordcount = ${wordCountToAdd}
               \n${message.content}`)
   let reply = await updateStreak(message.author.id, message)
-  await thread.send(wordCountToAdd + " words added to your total! Your new wordcount is: " + newWordCount + reply)
+  let embed = new EmbedBuilder()
+        .setColor(0xc57bf3)
+        .setTitle(message.author.username + '\'s words counted.')
+        .setDescription(wordCountToAdd + " words added to your total! Your new wordcount is: " + newWordCount + reply)
+  await thread.send({embeds: [embed]})//wordCountToAdd + " words added to your total! Your new wordcount is: " + newWordCount + reply)
 }
 
 client.on('threadCreate', async thread => {
@@ -164,7 +168,8 @@ client.on('threadCreate', async thread => {
       trackWords(thread, message, wordCountTotal)
       return
     } else if (message.content == undefined || message.content == "") {
-      await thread.send("I saw no words to count, if you supplied a screenshot with some writing make sure you use the Screenshot tag!");
+      let embed = new EmbedBuilder().setDescription("I saw no words to count, if you supplied a screenshot with some writing make sure you use the Screenshot tag!");
+      await thread.send({embeds: [embed]})
       return
     }
     

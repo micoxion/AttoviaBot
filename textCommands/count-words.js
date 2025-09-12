@@ -2,15 +2,20 @@ const { countWords } = require('../utility/word-counter.js')
 const { updateWordCount, updateStreak } = require('../database/writers.js');
 const { hasMessageBeenCounted, recordMessageTracked } = require('../database/messagesCounted.js')
 const { logToFile } = require('../utility/logger.js');
-const { createWorker } = require('tesseract.js')
+const { createWorker } = require('tesseract.js');
+const { EmbedBuilder } = require('discord.js');
 
 let countMessageWords = async function(message) {
     let wordCount = countWords(message.content)
     await recordMessageTracked(message.id)
     let newWordCount = await updateWordCount(message.author.id, wordCount, message.author.username)
     let messageAddition = await updateStreak(message.author.id, message)
+    let embed = new EmbedBuilder()
+        .setColor(0xc57bf3)
+        .setTitle(message.author.username + '\'s words counted.')
+        .setDescription(wordCount + " words added to your total! Your new wordcount is: " + newWordCount + messageAddition)
     await message.react("✅")
-    await message.reply(wordCount + " words added to your total! Your new wordcount is: " + newWordCount + messageAddition)
+    await message.reply({embeds: [embed]})//wordCount + " words added to your total! Your new wordcount is: " + newWordCount + messageAddition)
     logToFile("Counted words in message: " + message.id)
     return;
 }
@@ -19,18 +24,23 @@ exports.countMessageWords = countMessageWords
 
 exports.countRepliedMessageWords = async function(message) {
     logToFile("Attempting to count words in message");
+    let embed = new EmbedBuilder()
+        .setColor(0xc57bf3)
     if (!message.reference) {
-        await message.reply("Please make sure to reply to a message you wrote that you wish to count the words in!");
+        embed.setDescription("Please make sure to reply to a message you wrote that you wish to count the words in!")
+        await message.reply({embeds: [embed]});
         return;
     }
     let fetchedMessage = await message.fetchReference();
     if (fetchedMessage.author.id != message.author.id) {
-        await message.reply("You didn't write that message! Please only count words in messages you have written :)");
+        embed.setDescription("You didn't write that message! Please only count words in messages you have written :)")
+        await message.reply({embeds: [embed]});
         return;
     }
     let alreadyCounted = await hasMessageBeenCounted(fetchedMessage.id)
     if (alreadyCounted) {
-        await message.reply("Looks like you've already counted the words for that message!");
+        embed.setDescription("Looks like you've already counted the words for that message!")
+        await message.reply({embeds: [embed]});
         return;
     }
     await countMessageWords(fetchedMessage)
@@ -74,11 +84,15 @@ exports.countAttachmentWords = async function(message) {
         logToFile("Updated word count for " + message.author.username)
         await recordMessageTracked(message.id)
         logToFile("Message successfully tracked")
-        await message.react("✅");
+        await fetchedMessage.react("✅");
         logToFile(`${message.author.username} : ${message.author.id}\n
                 Message ID: ${message.id} | Wordcount = ${wordCountTotal}`)
         let reply = await updateStreak(message.author.id, message)
-        await message.reply(wordCountTotal + " words added to your total! Your new wordcount is: " + newWordCount + reply)
+        let embed = new EmbedBuilder()
+            .setColor(0xc57bf3)
+            .setTitle(message.author.username + '\'s words counted.')
+            .setDescription(wordCountTotal + " words added to your total! Your new wordcount is: " + newWordCount + reply)
+        await message.reply({embeds: [embed]})//wordCountTotal + " words added to your total! Your new wordcount is: " + newWordCount + reply)
         return
     }
 }
