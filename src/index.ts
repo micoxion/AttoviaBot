@@ -1,29 +1,30 @@
 // Import required modules 
-import { createRequire } from 'node:module';
-const require = createRequire(import.meta.url)
 import { createWorker } from 'tesseract.js';
 import { dirname } from 'path';
 import { fileURLToPath } from 'node:url';
 import { config } from 'dotenv';
-import { getRandomPrompt } from './database/prompts.js';
-const fs = require('node:fs');
-const path = require('node:path');
-const { Client, Collection, Events, GatewayIntentBits, MessageFlags, ThreadManager, ChannelType, EmbedBuilder } = require('discord.js'); 
-const { channel } = require('node:diagnostics_channel');
-const { handleDailyPromptMessage } = require('./messageListeners/daily-prompt.js')
-const { countMessageWords, countAttachmentWords, countRepliedMessageWords } = require('./textCommands/count-words.js')
-const { initialize } = require('./textCommands/initialize.js')
-const { initializePrompts } = require('./textCommands/initializePrompts.js')
-const { BTForumId, SWForumId, dailyPromptChannelId } = require('./config.json')
+import { getRandomPrompt } from './database/prompts';
+import fs from 'node:fs';
+import path from 'node:path';
+import { Client, Collection, Events, GatewayIntentBits, MessageFlags, ChannelType, EmbedBuilder, Interaction, SlashCommandBuilder } from 'discord.js'; 
+import { channel } from 'node:diagnostics_channel';
+import { handleDailyPromptMessage } from './messageListeners/daily-prompt';
+import { countAttachmentWords, countRepliedMessageWords } from './textCommands/count-words';
+import { initialize } from './textCommands/initialize';
+import { initializePrompts } from './textCommands/initializePrompts';
+import { ChatInputCommandInteraction, Message, ThreadChannel } from 'discord.js';
+import { BTForumId, SWForumId, dailyPromptChannelId } from '../config.json';
+import Module from 'node:module';
+import { CustomCommand } from './ABTypes/CustomCommand';
 
 //const { App } = require("./api/index.js")
 
-const { BTTags, SWTags, siroxionId } = require('./config.json');
-const { updateWordCount, updateStreak } = require('./database/writers.js');
-const { countWords } = require('./utility/word-counter.js');
-const { logToFile } = require('./utility/logger.js');
-const { recordMessageTracked } = require('./database/messagesCounted.js');
-const __filename = fileURLToPath(import.meta.url)
+import { BTTags, SWTags, siroxionId } from '../config.json';
+import { updateWordCount, updateStreak } from './database/writers';
+import { countWords } from './utilities/word-counter';
+import { logToFile } from './utilities/logger';
+import { recordMessageTracked } from './database/messagesCounted';
+//const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
 require('dotenv').config(); 
 
@@ -46,8 +47,8 @@ const client = new Client({
         GatewayIntentBits.GuildMessages,  
         GatewayIntentBits.MessageContent] 
     }); 
-    
-client.commands = new Collection();
+
+let commands: Collection<string, CustomCommand> = new Collection();
 
 const foldersPath = path.join(__dirname, 'commands');
 const commandFolders = fs.readdirSync(foldersPath)
@@ -56,13 +57,14 @@ console.log(commandFolders)
 for (let i = 0; i < commandFolders.length; i++) {
     let folder = commandFolders[i]
     const commandsPath = path.join(foldersPath, folder);
-    const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith('.js'));
+    const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith('.ts'));
+    console.log(commandFiles)
     for (const file of commandFiles) {
         const filePath = path.join(commandsPath, file);
         const command = require(filePath)
         // Set a new item in the Collection with the key as the command name and the value as the exported module
         if ('data' in command && 'execute' in command) {
-            client.commands.set(command.data.name, command);
+            commands.set(command.data.name, command);
         } else {
             console.log(`[WARNING] The command at ${filePath} is missing a required "data" or "execute" property.`);
         }
@@ -70,13 +72,13 @@ for (let i = 0; i < commandFolders.length; i++) {
 }
 // Bot is ready 
 client.once('clientReady', () => { 
-  console.log(`🤖 Logged in as ${client.user.tag}`); 
+  console.log(`🤖 Logged in as ${client.user?.tag}`); 
 }); 
 
-client.on(Events.InteractionCreate, async interaction => {
+client.on(Events.InteractionCreate, async (interaction: Interaction) => {
   if (!interaction.isChatInputCommand()) return;
-
-  const command = interaction.client.commands.get(interaction.commandName);
+  console.log(commands.toJSON())
+  const command = commands.get(interaction.commandName);
 
   if (!command) {
     console.error(`No command matching ${interaction.commandName} was found.`);
@@ -97,7 +99,7 @@ client.on(Events.InteractionCreate, async interaction => {
   //console.log(interaction);
 });
 
-async function trackWords(thread, message, wordCountToAdd) {
+async function trackWords(thread: ThreadChannel, message: Message, wordCountToAdd: number) {
   let newWordCount = await updateWordCount(message.author.id, wordCountToAdd, message.author.username)
   logToFile("Updated word count for " + message.author.username)
   await recordMessageTracked(message.id)
@@ -114,14 +116,25 @@ async function trackWords(thread, message, wordCountToAdd) {
   await thread.send({embeds: [embed]})//wordCountToAdd + " words added to your total! Your new wordcount is: " + newWordCount + reply)
 }
 
-client.on('threadCreate', async thread => {
+client.on('threadCreate', async (thread: ThreadChannel)  => {
   if (!thread.parent || thread.parent.type != ChannelType.GuildForum) {
     return;
   }
   if (thread.parent.id === BTForumId && !thread.appliedTags.includes(BTTags.PromptSuggestion) && !thread.appliedTags.includes(BTTags.MetaDiscussion)) {
     //must wait to ensure the forum post's starter message is properly available in the API
     await new Promise(resolve => setTimeout(resolve, 2000))
-    const message = await thread.fetchStarterMessage() //messages.values().toArray()[0];
+    let message = await thread.fetchStarterMessage() //messages.values().toArray()[0];
+    let maxRetry = 10
+    let tries = 0
+    while (message == null && tries < maxRetry) {
+      await new Promise(resolve => setTimeout(resolve, 500))
+      message = await thread.fetchStarterMessage()
+      tries++;
+    }
+    if (message == null) {
+      await thread.send("Could not retrieve starter message of thread, please manually count the message. Sorry ;-;")
+      return;
+    }
     const attachments = message.attachments
     console.log("Attachments: ", attachments)
     if (attachments.size >= 1 && thread.appliedTags.includes(BTTags.Screenshot)) {
@@ -149,7 +162,18 @@ client.on('threadCreate', async thread => {
   }
   if (thread.parent.id === SWForumId && !thread.appliedTags.includes(SWTags.MetaDiscussion)) {
     await new Promise(resolve => setTimeout(resolve, 1000))
-    const message = await thread.fetchStarterMessage() //messages.values().toArray()[0];
+    let message = await thread.fetchStarterMessage() //messages.values().toArray()[0];
+    let maxRetry = 10
+    let tries = 0
+    while (message == null && tries < maxRetry) {
+      await new Promise(resolve => setTimeout(resolve, 500))
+      message = await thread.fetchStarterMessage()
+      tries++;
+    }
+    if (message == null) {
+      await thread.send("Could not retrieve starter message of thread, please manually count the message. Sorry ;-;")
+      return;
+    }
     const attachments = message.attachments
     console.log("Attachments: ", attachments)
     if (attachments.size >= 1 && thread.appliedTags.includes(SWTags.Screenshot)) {
@@ -180,7 +204,7 @@ client.on('threadCreate', async thread => {
 });
 
 // Listen and respond to messages 
-client.on('messageCreate', async message => { 
+client.on('messageCreate', async (message: Message) => { 
 
   // Ignore messages from bots 
   if (message.author.bot) return; 
@@ -212,7 +236,7 @@ client.on('messageCreate', async message => {
     let embed = new EmbedBuilder()
             .setColor(0xc57bf3)
             .setTitle("Build Together Day " + prompt.day.toString())
-            .setAuthor({ name: 'AttoviaBot', iconURL: interaction.client.user.displayAvatarURL() })
+            .setAuthor({ name: 'AttoviaBot', iconURL: client.user?.displayAvatarURL() })
             .setDescription("> " + prompt.prompt + "\n" + prompt.source + "\n### Date\n" + "<t:" + Math.floor(prompt.date.getTime() / 1000).toString() + ":D>")
             .setFields(
                 { name: "Original Message", value: prompt.originalMessage }

@@ -4,7 +4,10 @@
   "description": "A wordcounter bot for the Attovia discord",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "tsx watch src/index.ts",
+    "start": "node dist/index.js",
+    "build": "tsup src/index.ts --minify"
   },
   "author": "SirOxion",
   "license": "ISC",
@@ -16,5 +19,10 @@
     "mongodb": "^6.18.0",
     "mongoose": "^8.18.0",
     "tesseract.js": "^6.0.1"
+  },
+  "devDependencies": {
+    "tsup": "^8.5.0",
+    "tsx": "^4.20.5",
+    "typescript": "^5.9.2"
   }
 }

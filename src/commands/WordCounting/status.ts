@@ -1,9 +1,9 @@
-const { SlashCommandBuilder, EmbedBuilder } = require('discord.js')
-const { getWriterByUserId } = require('../../database/writers.js')
+import { SlashCommandBuilder, EmbedBuilder, ChatInputCommandInteraction, SlashCommandUserOption } from 'discord.js'
+import { getWriterByUserId } from '../../database/writers'
 
 const tiers = [500, 1000, 5000, 10000, 20000, 30000, 40000, 50000, 75000, 100000, 150000, 200000 ]
 
-const buildBook = function(totalCount, username) {
+const buildBook = function(totalCount: number, username: string): string {
     let tierIndex = -1
     for (let i = 0; i < tiers.length; i++) {
         if (totalCount <= tiers[i]) {
@@ -12,14 +12,14 @@ const buildBook = function(totalCount, username) {
         tierIndex = i
     }    
     if (tierIndex == -1) {
-        return ```
+        return `
 Your lore bible requires ${tiers[tierIndex + 1] - totalCount} more words to reach the first tier! Keep it up!\n
 \`\`\`
         /\ ${username}
        /_/    __
     __/_____ |__|
 \`\`\`
-        ```
+        `
     }
     let finalString = ""
     if (tierIndex < tiers.length - 1) {
@@ -129,16 +129,20 @@ module.exports = {
     data: new SlashCommandBuilder()
         .setName("status")
         .setDescription("Get your wordcount and streak status")
-        .addUserOption(option => 
+        .addUserOption((option: SlashCommandUserOption) => 
             option.setName('writer')
                 .setDescription("Writer to get the status of.")
         ),
-    async execute(interaction) {
+    async execute(interaction: ChatInputCommandInteraction) {
         let writerOption = interaction.options.getUser('writer');
         if (writerOption == null) {
             writerOption = interaction.user
         }
         let writer = await getWriterByUserId(writerOption.id, writerOption.username)
+        if (writer == null || writer == undefined) {
+            await interaction.reply("Failed to find that writer in the database!");
+            return;
+        }
         let writeTime = "N/A"
         if (writer.lastTimeWrote) {
             writeTime = "<t:" + Math.floor(writer.lastTimeWrote.getTime() / 1000).toString() + ">"
@@ -149,11 +153,15 @@ module.exports = {
             .setAuthor({ name: 'AttoviaBot', iconURL: interaction.client.user.displayAvatarURL()})
             .setThumbnail(writerOption.displayAvatarURL())
             .addFields(
+                //@ts-ignore
                 { name: 'Word count', value: writer.wordCount.toString() },
                 //{ name: '\u200B', value: '\u200B' },
+                //@ts-ignore
                 { name: 'Current Streak: ', value: writer.streak.toString() },
+                //@ts-ignore
                 { name: "Longest Streak: ", value: writer.longestStreak.toString() || "0" },
                 { name: "Last time you wrote: ", value: writeTime},
+                //@ts-ignore
                 { name: "Lore bible: ", value: buildBook(writer.wordCount, writerOption.username)}
             )
         console.log(writer, " ", writerOption.id)
