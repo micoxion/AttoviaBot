@@ -3,27 +3,28 @@ import { createWorker } from 'tesseract.js';
 import { dirname } from 'path';
 import { fileURLToPath } from 'node:url';
 import { config } from 'dotenv';
-import { getRandomPrompt } from './database/prompts';
+import { getRandomPrompt } from './database/postgres/prompts';
 import fs from 'node:fs';
 import path from 'node:path';
-import { Client, Collection, Events, GatewayIntentBits, MessageFlags, ChannelType, EmbedBuilder, Interaction, SlashCommandBuilder } from 'discord.js'; 
+import { Client, Collection, Events, GatewayIntentBits, MessageFlags, ChannelType, EmbedBuilder, Interaction, WelcomeChannel, TextChannel, TextDisplayBuilder, ThumbnailBuilder, SectionBuilder, ActivityType } from 'discord.js'; 
 import { channel } from 'node:diagnostics_channel';
 import { handleDailyPromptMessage } from './messageListeners/daily-prompt';
 import { countAttachmentWords, countRepliedMessageWords } from './textCommands/count-words';
 import { initialize } from './textCommands/initialize';
 import { initializePrompts } from './textCommands/initializePrompts';
 import { ChatInputCommandInteraction, Message, ThreadChannel } from 'discord.js';
-import { BTForumId, SWForumId, dailyPromptChannelId } from '../config.json';
+import { BTForumId, SWForumId, dailyPromptChannelId, welcomeChannelId } from '../config.json';
 import Module from 'node:module';
 import { CustomCommand } from './ABTypes/CustomCommand';
 
 //const { App } = require("./api/index.js")
 
 import { BTTags, SWTags, siroxionId } from '../config.json';
-import { updateWordCount, updateStreak } from './database/writers';
+import { updateWordCount, updateStreak } from './database/postgres/writers';
 import { countWords } from './utilities/word-counter';
 import { logToFile } from './utilities/logger';
-import { recordMessageTracked } from './database/messagesCounted';
+import { recordMessageTracked } from './database/postgres/messagesCounted';
+import { userInfo } from 'node:os';
 //const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
 require('dotenv').config(); 
@@ -73,6 +74,13 @@ for (let i = 0; i < commandFolders.length; i++) {
 // Bot is ready 
 client.once('clientReady', () => { 
   console.log(`🤖 Logged in as ${client.user?.tag}`); 
+  client.user?.setPresence({
+    activities: [{
+      name: '/server-info',
+      type: ActivityType.Watching
+    }],
+    status: 'online'
+  })
 }); 
 
 client.on(Events.InteractionCreate, async (interaction: Interaction) => {
@@ -102,13 +110,14 @@ client.on(Events.InteractionCreate, async (interaction: Interaction) => {
 async function trackWords(thread: ThreadChannel, message: Message, wordCountToAdd: number) {
   let newWordCount = await updateWordCount(message.author.id, wordCountToAdd, message.author.username)
   logToFile("Updated word count for " + message.author.username)
+  //await recordMessageTracked(message.id, message.author.id, message.author.username)
   await recordMessageTracked(message.id)
   logToFile("Message successfully tracked")
   await message.react("✅");
   logToFile(`${message.author.username} : ${message.author.id} | ${thread.name}\n
           Message ID: ${message.id} | Wordcount = ${wordCountToAdd}
               \n${message.content}`)
-  let reply = await updateStreak(message.author.id, message)
+  let reply = await updateStreak(message.author.id, message.author.username, message)
   let embed = new EmbedBuilder()
         .setColor(0xc57bf3)
         .setTitle(message.author.username + '\'s words counted.')
@@ -202,6 +211,28 @@ client.on('threadCreate', async (thread: ThreadChannel)  => {
     trackWords(thread, message, wordCount)
   }
 });
+
+client.on('guildMemberAdd', async (member) => {
+  logToFile("PERSON JOINING GUILD: " + member.toString())
+  const welcomeChannel = await member.guild.channels.fetch(welcomeChannelId) as TextChannel
+  // const textDisplay = new TextDisplayBuilder()
+  //   .setContent("Hello <@"+member.id+">! Someone will be along shortly to welcome you properly, in the meantime feel free to get the lay of the land with my /server-info command!");
+  //   const thumbnail = new ThumbnailBuilder()
+  //     .setURL(client.user?.avatarURL() || "")
+  const section = new SectionBuilder()
+    .addTextDisplayComponents(
+      textDisplay => textDisplay
+        .setContent("Hello <@"+member.id+">! Someone will be along shortly to welcome you properly, in the meantime feel free to get the lay of the land with my /server-info command!")
+    )
+    .setThumbnailAccessory(
+      thumbnail => thumbnail
+        .setDescription("Cute profile pic of AttoviaBot smiling")
+        .setURL(client.user?.avatarURL() || "")
+    )
+  if (welcomeChannel) {
+    await welcomeChannel.send({components: [section], flags: MessageFlags.IsComponentsV2})
+  }
+})
 
 // Listen and respond to messages 
 client.on('messageCreate', async (message: Message) => { 

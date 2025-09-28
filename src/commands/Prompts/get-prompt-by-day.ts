@@ -1,5 +1,5 @@
 import { SlashCommandBuilder, EmbedBuilder, ChatInputCommandInteraction, } from 'discord.js';
-import { getPromptByDay } from '../../database/prompts'
+import { getPromptByDay } from '../../database/postgres/prompts'
 
 module.exports = {
     data: new SlashCommandBuilder()

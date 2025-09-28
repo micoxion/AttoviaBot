@@ -1,8 +1,8 @@
 import { ChatInputCommandInteraction, Options, SlashCommandStringOption } from "discord.js";
 
 import { SlashCommandBuilder } from 'discord.js';
-import { updateWordCount, updateStreak } from "../../database/writers";
-import { hasMessageBeenCounted, recordMessageTracked } from "../../database/messagesCounted";
+import { updateWordCount, updateStreak } from "../../database/postgres/writers";
+import { hasMessageBeenCounted, recordMessageTracked } from "../../database/postgres/messagesCounted";
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -31,9 +31,9 @@ module.exports = {
         //console.log(interaction.user.id, " ", fetchedMessage.author.id)
         let alreadyCounted = await hasMessageBeenCounted(fetchedMessage.id)
         if (interaction.user.id == fetchedMessage.author.id && !alreadyCounted) {
-            await recordMessageTracked(fetchedMessage.id)
+            await recordMessageTracked(fetchedMessage.id, fetchedMessage.author.id, fetchedMessage.author.username)
             let newWordCount = await updateWordCount(interaction.user.id, wordCount, interaction.user.username)
-            let messageAddition = await updateStreak(interaction.user.id, fetchedMessage)
+            let messageAddition = await updateStreak(interaction.user.id, interaction.user.username, fetchedMessage)
             await fetchedMessage.react("✅")
             await interaction.reply(wordCount + " words added to your total! Your new wordcount is: " + newWordCount + messageAddition)       
         }

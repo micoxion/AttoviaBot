@@ -2,7 +2,7 @@ import { Client, TextChannel } from "discord.js";
 
 import { dailyPromptChannelId, guildId } from '../../config.json';
 import { fetchAllMessages } from '../utilities/fetchAllMessages.js';
-import { addPrompt } from '../database/prompts.js';
+import { addPrompt } from '../database/postgres/prompts.js';
 
 export async function initializePrompts(client: Client) {
     const guild = client.guilds.cache.get(guildId);

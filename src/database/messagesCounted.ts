@@ -1,7 +1,17 @@
 import { MongoClient } from 'mongodb';
 import { logToFile } from '../utilities/logger';
+import { Schema, connect } from 'mongoose'
 
 require('dotenv').config(); 
+
+
+//connect(process.env.MONGODB_CONNECTION || "");
+
+// const messagesCountedSchema = new Schema({
+//     messageId: string
+// });
+
+//const MessagesCountedModel = mongoose.model("MessagesCounted", messagesCountedSchema, "messagesCounted")
 
 const url = process.env.MONGODB_CONNECTION;
 if (url == undefined) {
@@ -34,4 +44,9 @@ export async function hasMessageBeenCounted(messageId: string) {
 export async function recordMessageTracked(messageId: string) {
     await messagesCountedCollection.insertOne({messageId: messageId});
     logToFile("Message " + messageId + " successfully tracked");
+}
+
+export async function getAllMessagesCounted() {
+    let messages = await messagesCountedCollection.find();
+    return messages
 }

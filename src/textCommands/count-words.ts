@@ -1,17 +1,17 @@
 import { Message } from "discord.js";
 
 import { countWords } from '../utilities/word-counter';
-import { updateWordCount, updateStreak } from '../database/writers';
-import { hasMessageBeenCounted, recordMessageTracked } from '../database/messagesCounted';
+import { updateWordCount, updateStreak } from '../database/postgres/writers';
+import { hasMessageBeenCounted, recordMessageTracked } from '../database/postgres/messagesCounted';
 import { logToFile } from '../utilities/logger';
 import { createWorker } from 'tesseract.js';
 import { EmbedBuilder } from 'discord.js';
 
 let countMessageWords = async function(message: Message) {
     let wordCount = countWords(message.content)
-    await recordMessageTracked(message.id)
+    await recordMessageTracked(message.id, message.author.id, message.author.username)
     let newWordCount = await updateWordCount(message.author.id, wordCount, message.author.username)
-    let messageAddition = await updateStreak(message.author.id, message)
+    let messageAddition = await updateStreak(message.author.id, message.author.username, message)
     let embed = new EmbedBuilder()
         .setColor(0xc57bf3)
         .setTitle(message.author.username + '\'s words counted.')
@@ -84,12 +84,12 @@ export async function countAttachmentWords(message: Message) {
         //logToFile("Tracking build Together image post: " + thread.name + " | Message: " + message.id);
         let newWordCount = await updateWordCount(message.author.id, wordCountTotal, message.author.username)
         logToFile("Updated word count for " + message.author.username)
-        await recordMessageTracked(message.id)
+        await recordMessageTracked(message.id, message.author.id, message.author.username)
         logToFile("Message successfully tracked")
         await fetchedMessage.react("✅");
         logToFile(`${message.author.username} : ${message.author.id}\n
                 Message ID: ${message.id} | Wordcount = ${wordCountTotal}`)
-        let reply = await updateStreak(message.author.id, fetchedMessage)
+        let reply = await updateStreak(message.author.id, message.author.username, fetchedMessage)
         let embed = new EmbedBuilder()
             .setColor(0xc57bf3)
             .setTitle(message.author.username + '\'s words counted.')

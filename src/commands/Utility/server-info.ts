@@ -1,5 +1,4 @@
-import { EmbedBuilder } from "@discordjs/builders";
-import { ChatInputCommandInteraction, SlashCommandBuilder } from "discord.js";
+import { ChatInputCommandInteraction, SlashCommandBuilder, MessageFlags, ButtonStyle, APIMessageComponentEmoji, ActionRowData, EmbedBuilder, ActionRowBuilder, ButtonBuilder, Events, Interaction, ButtonInteraction } from "discord.js";
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -25,7 +24,7 @@ module.exports = {
                     "- <#1255936478614126757> Whenever I push new updates or documents to the Attovia wiki I will send a message here and ping the <@&1255993879149285408> role!\n" +
                     "- <#1232400118066708611> Where we all once stood :head_shaking_vertically:.\n" +
                     "- <#1232405575321780297> If you have any recommendations, suggestions or questions regarding the server send them here!\n" +
-                    "- <#1332074921060339876> Go here to get any relevent roles you see listed here!\n"
+                    "- <#1332074921060339876> Go here to get any relevent roles you see listed here! If a category has a role next to it you will need that role to see the channels there!\n"
                 },
                 {
                     name: "🔔 Attovian Dailies 📰",
@@ -58,7 +57,11 @@ module.exports = {
                     "- <#1332787009923580048> Every day I post the Build Together prompt for the day in this channel! If you have an idea for a prompt post it in the <#1390165892947640482> forum and tag it as a Prompt Suggestion!\n" +
                     "- <#1390165892947640482> This is the Build Together forum where you can post your response to the daily promtp! Make sure to check out the tags and the post guidelines!\n" +
                     "- <#1390084868855042182> If you have an interesting thought for a plot, character or really any kind of concept that might elicit an interesting piece of art that you don't care to have ownership over, drop it here for anyone to use! Or use something someone else has put here! But please give some kind of attribution!\n"
-                },
+                }
+            )
+        let embed2 = new EmbedBuilder()
+            .setColor(0xc57bf3)
+            .setFields(
                 {
                     name: "⚔ THE BIG GAME 🐉",
                     value:
@@ -67,8 +70,72 @@ module.exports = {
                     "- <#1344007673409966123> Here you can jump into or check your place in the player queue! When its your turn you'll be pinged by me with the <@&1344009445822431387> role!\n" +
                     "- <#1344747561885503608> For any discussion or hyping up of fellow heros as it relates to the story!\n" +
                     "- <#1345087693708595250> If you have any other questions or are still confused after looking over the rules then ask away here!"
+                },
+                {
+                    name: "spammy",
+                    value:
+                    "- <#1333590743838756947> MEE6 has long since left us, but someday this channel will be used for a leveling system that <@331634391790911488> will add to my functionality!\n" +
+                    "- <#1333590850252570675> Any bot commands that might spam another channel can go here :)\n" +
+                    "- <#1349807102792695903> Just post whatever here so long as it doesn't break server rules :P\n" +
+                    "- <#1367558860222627940> Do you create content? Do you do commissions? Please post here and let us know what you do/offer!\n" +
+                    "- <#1375886343657361478> Used to move the Attovian calendar forward when the main campaign progresses in time!"
+                },
+                {
+                    name: "🌏 World Building 🌌 <@&1232395644702949396>",
+                    value:
+                    "- <#1403469524673499227> The general share writing forum, any kind of creative writing you want to share can be shared here just check the post guidelines!\n" +
+                    "- <#1332787076676190310> Before the forum writing was posted here, feel free to look over what people posted many months ago!\n" +
+                    "- <#1332787171584901183> Discuss and talk shop with World Builders about all things World Building!\n" +
+                    "- <#1332788312716476608> Any cool resources you know of that you think others might find interesting for the purposes of World Building you should share with us here! Or checkout what other cool tools people have shared :AttoviaFire:\n"
+                },
+                {
+                    name: "",
+                    value:
+                    "- <#1335010811516555274> Share maps and art from your setting(s)!\n" +
+                    "- <#1374429330012115056> Have a question about someone's setting/world? Ask them here!\n" +
+                    "- <#1376960471554457671> Currently an unnused project similar to Shoutout Saturday that never took off!"
                 }
             )
-        await interaction.reply({embeds: [embed], ephemeral: true})
+
+        const row = new ActionRowBuilder<ButtonBuilder>();
+        row.addComponents(
+            new ButtonBuilder()
+                .setCustomId("next-page")
+                .setLabel("Page 2")
+                .setEmoji("➡️" as APIMessageComponentEmoji)
+                .setStyle(ButtonStyle.Secondary)
+        )
+        const rowPage2 = new ActionRowBuilder<ButtonBuilder>();
+        rowPage2.addComponents(
+            new ButtonBuilder()
+                .setCustomId("previous-page")
+                .setLabel("Page 1")
+                .setEmoji("⬅️" as APIMessageComponentEmoji)
+                .setStyle(ButtonStyle.Secondary)
+        )
+        let response = await interaction.reply({embeds: [embed], components: [row], flags: MessageFlags.Ephemeral})
+        let buttonEmitter = interaction.client.on(Events.InteractionCreate, async (interaction: Interaction) => {
+            if (!interaction.isButton()) return;
+            if (interaction.customId === "next-page") {
+                await interaction.deferReply({flags: MessageFlags.Ephemeral})
+                await response.edit({embeds: [embed2], components: [rowPage2]})
+                await interaction.deleteReply();
+            }
+            if (interaction.customId === "previous-page") {
+                await interaction.deferReply({flags: MessageFlags.Ephemeral})
+                await response.edit({embeds: [embed], components: [row]})
+                await interaction.deleteReply();
+            }
+        })
+        const collector = interaction.channel?.createMessageComponentCollector({
+            filter: i => i.user.id === interaction.user.id,
+            idle: 15000
+        });
+        collector?.on('end', (collected, reason) => {
+            if (reason === 'idle') {
+                buttonEmitter.destroy()
+                response.delete()
+            }
+        })
     }
 }

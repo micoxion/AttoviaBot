@@ -1,7 +1,7 @@
 import { Message } from "discord.js";
 
 import { logToFile } from '../utilities/logger';
-import { addPrompt } from '../database/prompts';
+import { addPrompt } from '../database/postgres/prompts';
 
 export async function handleDailyPromptMessage(message: Message) {
     logToFile("Adding new daily prompt!")

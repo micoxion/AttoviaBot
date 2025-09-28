@@ -43,3 +43,8 @@ export async function getRandomPrompt() {
     console.log(result)
     return result[0]
 }
+
+export async function getAllPrompts() {
+    let allPrompts = await PromptModel.find();
+    return allPrompts
+}

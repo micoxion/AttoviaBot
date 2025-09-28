@@ -1,5 +1,5 @@
 import { SlashCommandBuilder, EmbedBuilder, ChatInputCommandInteraction, SlashCommandUserOption } from 'discord.js'
-import { getWriterByUserId } from '../../database/writers'
+import { getWriterByUserId } from '../../database/postgres/writers'
 
 const tiers = [500, 1000, 5000, 10000, 20000, 30000, 40000, 50000, 75000, 100000, 150000, 200000 ]
 
