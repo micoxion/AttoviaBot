@@ -1,12 +1,12 @@
 import { escapeLiteral } from 'pg';
-import pool from './database/database'
-import { getAllPrompts } from './database/prompts';
-import { addPrompt } from './database/prompts';
-import { getAllWriters, getWriterByUserId, updateWordCount } from './database/writers';
-import { getAllMessagesCounted } from './database/messagesCounted';
-import { recordMessageTracked } from './database/postgres/messagesCounted';
+import pool from './database/database.js'
+import { getAllPrompts } from './database/prompts.js';
+import { addPrompt } from './database/prompts.js';
+import { getAllWriters, getWriterByUserId, updateWordCount } from './database/writers.js';
+import { getAllMessagesCounted } from './database/messagesCounted.js';
+import { recordMessageTracked } from './database/postgres/messagesCounted.js';
 import { ChannelType, Client, GatewayIntentBits, managerToFetchingStrategyOptions, Message, TextChannel } from 'discord.js';
-import { guildId } from '../config.json'
+//import { guildId } from '../config.json'
 
 async function insertWithPool() {
     const client = await pool.connect();

@@ -1,6 +1,6 @@
-import pool from '../database'
+import pool from '../database.js'
 import dotenv from 'dotenv'
-import { Prompt } from '../../ABTypes/Prompt'
+import { Prompt } from '../../ABTypes/Prompt.js'
 
 dotenv.config()
 

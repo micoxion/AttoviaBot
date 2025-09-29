@@ -1,5 +1,5 @@
 import { MongoClient } from 'mongodb';
-import { logToFile } from '../utilities/logger';
+import { logToFile } from '../utilities/logger.js';
 import { Schema, connect } from 'mongoose'
 
 require('dotenv').config(); 

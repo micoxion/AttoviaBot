@@ -1,13 +1,15 @@
-import { Prompt } from "../ABTypes/Prompt";
+import { Prompt } from "../ABTypes/Prompt.js";
 
 import { MongoClient } from 'mongodb';
 import { logToFile } from '../utilities/logger';
 
-const mongoose = require('mongoose');
+import mongoose from "mongoose";
+
+//const mongoose = require('mongoose');
 
 require('dotenv').config()
 const url = process.env.MONGODB_CONNECTION;
-mongoose.connect(url)
+mongoose.connect(url || "")
 
 const promptSchema = new mongoose.Schema({
     day: Number,

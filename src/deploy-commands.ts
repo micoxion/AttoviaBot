@@ -1,5 +1,7 @@
 import { REST, Routes } from 'discord.js';
-import { clientId, guildId } from '../config.json';
+import { createRequire } from 'node:module';
+const require = createRequire(import.meta.url);
+const { clientId, guildId } = require('../config.json')// with { type: 'json' };
 import fs from 'node:fs';
 import path from 'node:path';
 require('dotenv').config(); 

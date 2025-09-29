@@ -3,29 +3,27 @@ import { createWorker } from 'tesseract.js';
 import { dirname } from 'path';
 import { fileURLToPath } from 'node:url';
 import { config } from 'dotenv';
-import { getRandomPrompt } from './database/postgres/prompts';
+import { getRandomPrompt } from './database/postgres/prompts.js';
 import fs from 'node:fs';
 import path from 'node:path';
-import { Client, Collection, Events, GatewayIntentBits, MessageFlags, ChannelType, EmbedBuilder, Interaction, WelcomeChannel, TextChannel, TextDisplayBuilder, ThumbnailBuilder, SectionBuilder, ActivityType } from 'discord.js'; 
-import { channel } from 'node:diagnostics_channel';
-import { handleDailyPromptMessage } from './messageListeners/daily-prompt';
-import { countAttachmentWords, countRepliedMessageWords } from './textCommands/count-words';
-import { initialize } from './textCommands/initialize';
-import { initializePrompts } from './textCommands/initializePrompts';
-import { ChatInputCommandInteraction, Message, ThreadChannel } from 'discord.js';
-import { BTForumId, SWForumId, dailyPromptChannelId, welcomeChannelId } from '../config.json';
-import Module from 'node:module';
-import { CustomCommand } from './ABTypes/CustomCommand';
+import url from 'url'
+import { Client, Collection, Events, GatewayIntentBits, MessageFlags, ChannelType, EmbedBuilder, Interaction, TextChannel, SectionBuilder, ActivityType } from 'discord.js'; 
+import { handleDailyPromptMessage } from './messageListeners/daily-prompt.js';
+import { countAttachmentWords, countRepliedMessageWords } from './textCommands/count-words.js';
+//import { initialize } from './textCommands/initialize.js';
+//import { initializePrompts } from './textCommands/initializePrompts.js';
+import { Message, ThreadChannel } from 'discord.js';
+import { createRequire } from 'node:module';
+const require = createRequire(import.meta.url);
+const { BTForumId, SWForumId, dailyPromptChannelId, welcomeChannelId, BTTags, SWTags, siroxionId } = require('../config.json')// with { type: 'json' }
+//import Module from 'node:module';
+import { CustomCommand } from './ABTypes/CustomCommand.js';
 
-//const { App } = require("./api/index.js")
-
-import { BTTags, SWTags, siroxionId } from '../config.json';
-import { updateWordCount, updateStreak } from './database/postgres/writers';
-import { countWords } from './utilities/word-counter';
-import { logToFile } from './utilities/logger';
-import { recordMessageTracked } from './database/postgres/messagesCounted';
-import { userInfo } from 'node:os';
-//const __filename = fileURLToPath(import.meta.url)
+import { updateWordCount, updateStreak } from './database/postgres/writers.js';
+import { countWords } from './utilities/word-counter.js';
+import { logToFile } from './utilities/logger.js';
+import { recordMessageTracked } from './database/postgres/messagesCounted.js';
+const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
 require('dotenv').config(); 
 
@@ -58,17 +56,22 @@ console.log(commandFolders)
 for (let i = 0; i < commandFolders.length; i++) {
     let folder = commandFolders[i]
     const commandsPath = path.join(foldersPath, folder);
-    const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith('.ts'));
+    const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith('.js'));
     console.log(commandFiles)
     for (const file of commandFiles) {
         const filePath = path.join(commandsPath, file);
-        const command = require(filePath)
-        // Set a new item in the Collection with the key as the command name and the value as the exported module
-        if ('data' in command && 'execute' in command) {
-            commands.set(command.data.name, command);
-        } else {
-            console.log(`[WARNING] The command at ${filePath} is missing a required "data" or "execute" property.`);
-        }
+        const fileURL = url.pathToFileURL(filePath)
+        console.log(filePath)
+        //const command = require(filePath)
+        import(fileURL.href)
+          .then((command) => {
+            // Set a new item in the Collection with the key as the command name and the value as the exported module
+            if ('data' in command && 'execute' in command) {
+                commands.set(command.data.name, command);
+            } else {
+                console.log(`[WARNING] The command at ${filePath} is missing a required "data" or "execute" property.`);
+            }
+          })
     }
 }
 // Bot is ready 
@@ -254,13 +257,13 @@ client.on('messageCreate', async (message: Message) => {
     await countRepliedMessageWords(message)
   }
 
-  if (message.content.startsWith("!ab init") && message.author.id == siroxionId) {
-    await initialize(client)
-  }
+  // if (message.content.startsWith("!ab init") && message.author.id == siroxionId) {
+  //   await initialize(client)
+  // }
 
-  if (message.content.startsWith("!ab prompts init") && message.author.id == siroxionId) {
-    await initializePrompts(client)
-  }
+  // if (message.content.startsWith("!ab prompts init") && message.author.id == siroxionId) {
+  //   await initializePrompts(client)
+  // }
 
   if (message.content.startsWith("!ab random prompt")) {
     let prompt = await getRandomPrompt()

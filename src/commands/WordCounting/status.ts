@@ -1,5 +1,6 @@
 import { SlashCommandBuilder, EmbedBuilder, ChatInputCommandInteraction, SlashCommandUserOption } from 'discord.js'
-import { getWriterByUserId } from '../../database/postgres/writers'
+import { getWriterByUserId } from '../../database/postgres/writers.js'
+import { Writer } from '../../ABTypes/Writer.js'
 
 const tiers = [500, 1000, 5000, 10000, 20000, 30000, 40000, 50000, 75000, 100000, 150000, 200000 ]
 
@@ -125,47 +126,87 @@ Your lore bible requires ${tiers[tierIndex + 1] - totalCount} more words to reac
 // ```
 // ]
 
-module.exports = {
-    data: new SlashCommandBuilder()
+export let data = new SlashCommandBuilder()
         .setName("status")
         .setDescription("Get your wordcount and streak status")
         .addUserOption((option: SlashCommandUserOption) => 
             option.setName('writer')
                 .setDescription("Writer to get the status of.")
-        ),
-    async execute(interaction: ChatInputCommandInteraction) {
-        let writerOption = interaction.options.getUser('writer');
-        if (writerOption == null) {
-            writerOption = interaction.user
-        }
-        let writer = await getWriterByUserId(writerOption.id, writerOption.username)
-        if (writer == null || writer == undefined) {
-            await interaction.reply("Failed to find that writer in the database!");
-            return;
-        }
-        let writeTime = "N/A"
-        if (writer.lastTimeWrote) {
-            writeTime = "<t:" + Math.floor(writer.lastTimeWrote.getTime() / 1000).toString() + ">"
-        }
-        let embed = new EmbedBuilder()
-            .setColor(0xc57bf3)
-            .setTitle(writerOption.username + '\'s Stats')
-            .setAuthor({ name: 'AttoviaBot', iconURL: interaction.client.user.displayAvatarURL()})
-            .setThumbnail(writerOption.displayAvatarURL())
-            .addFields(
-                //@ts-ignore
-                { name: 'Word count', value: writer.wordCount.toString() },
-                //{ name: '\u200B', value: '\u200B' },
-                //@ts-ignore
-                { name: 'Current Streak: ', value: writer.streak.toString() },
-                //@ts-ignore
-                { name: "Longest Streak: ", value: writer.longestStreak.toString() || "0" },
-                { name: "Last time you wrote: ", value: writeTime},
-                //@ts-ignore
-                { name: "Lore bible: ", value: buildBook(writer.wordCount, writerOption.username)}
-            )
-        console.log(writer, " ", writerOption.id)
-        await interaction.reply({embeds: [embed]})
-        //await interaction.reply("You are currently on a " + writer.streak + " day streak and have written " + writer.wordCount + " words in the Attovia discord!")
+        )
+
+export async function execute(interaction: ChatInputCommandInteraction) {
+    let writerOption = interaction.options.getUser('writer');
+    if (writerOption == null) {
+        writerOption = interaction.user
     }
+    let writer: Writer = await getWriterByUserId(writerOption.id, writerOption.username)
+    if (writer == null || writer == undefined) {
+        await interaction.reply("Failed to find that writer in the database!");
+        return;
+    }
+    let writeTime = "N/A"
+    if (writer.lasttimewrote) {
+        writeTime = "<t:" + Math.floor(writer.lasttimewrote.getTime() / 1000).toString() + ">"
+    }
+    let embed = new EmbedBuilder()
+        .setColor(0xc57bf3)
+        .setTitle(writerOption.username + '\'s Stats')
+        .setAuthor({ name: 'AttoviaBot', iconURL: interaction.client.user.displayAvatarURL()})
+        .setThumbnail(writerOption.displayAvatarURL())
+        .addFields(
+            { name: 'Word count', value: writer.wordcount.toString() },
+            //{ name: '\u200B', value: '\u200B' },
+            { name: 'Current Streak: ', value: writer.streak.toString() },
+            { name: "Longest Streak: ", value: writer.longeststreak.toString() || "0" },
+            { name: "Last time you wrote: ", value: writeTime},
+            { name: "Lore bible: ", value: buildBook(writer.wordcount, writerOption.username)}
+        )
+    console.log(writer, " ", writerOption.id)
+    await interaction.reply({embeds: [embed]})
+    //await interaction.reply("You are currently on a " + writer.streak + " day streak and have written " + writer.wordCount + " words in the Attovia discord!")
 }
+
+// module.exports = {
+//     data: new SlashCommandBuilder()
+//         .setName("status")
+//         .setDescription("Get your wordcount and streak status")
+//         .addUserOption((option: SlashCommandUserOption) => 
+//             option.setName('writer')
+//                 .setDescription("Writer to get the status of.")
+//         ),
+//     async execute(interaction: ChatInputCommandInteraction) {
+//         let writerOption = interaction.options.getUser('writer');
+//         if (writerOption == null) {
+//             writerOption = interaction.user
+//         }
+//         let writer = await getWriterByUserId(writerOption.id, writerOption.username)
+//         if (writer == null || writer == undefined) {
+//             await interaction.reply("Failed to find that writer in the database!");
+//             return;
+//         }
+//         let writeTime = "N/A"
+//         if (writer.lastTimeWrote) {
+//             writeTime = "<t:" + Math.floor(writer.lastTimeWrote.getTime() / 1000).toString() + ">"
+//         }
+//         let embed = new EmbedBuilder()
+//             .setColor(0xc57bf3)
+//             .setTitle(writerOption.username + '\'s Stats')
+//             .setAuthor({ name: 'AttoviaBot', iconURL: interaction.client.user.displayAvatarURL()})
+//             .setThumbnail(writerOption.displayAvatarURL())
+//             .addFields(
+//                 //@ts-ignore
+//                 { name: 'Word count', value: writer.wordCount.toString() },
+//                 //{ name: '\u200B', value: '\u200B' },
+//                 //@ts-ignore
+//                 { name: 'Current Streak: ', value: writer.streak.toString() },
+//                 //@ts-ignore
+//                 { name: "Longest Streak: ", value: writer.longestStreak.toString() || "0" },
+//                 { name: "Last time you wrote: ", value: writeTime},
+//                 //@ts-ignore
+//                 { name: "Lore bible: ", value: buildBook(writer.wordCount, writerOption.username)}
+//             )
+//         console.log(writer, " ", writerOption.id)
+//         await interaction.reply({embeds: [embed]})
+//         //await interaction.reply("You are currently on a " + writer.streak + " day streak and have written " + writer.wordCount + " words in the Attovia discord!")
+//     }
+// }

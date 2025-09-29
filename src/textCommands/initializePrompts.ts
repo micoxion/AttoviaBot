@@ -1,6 +1,7 @@
 import { Client, TextChannel } from "discord.js";
-
-import { dailyPromptChannelId, guildId } from '../../config.json';
+import { createRequire } from 'node:module';
+const require = createRequire(import.meta.url);
+const { dailyPromptChannelId, guildId } = require('../../config.json')// with { type: 'json' };
 import { fetchAllMessages } from '../utilities/fetchAllMessages.js';
 import { addPrompt } from '../database/postgres/prompts.js';
 

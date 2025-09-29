@@ -1,15 +1,24 @@
 {
   "compilerOptions": {
     "target": "ES2022",
-    "module": "commonjs",
+    "module": "esnext",
     "rootDir": "./src",
     "outDir": "./dist",
     "removeComments": true,
+    "moduleResolution": "node",
     "resolveJsonModule": true,
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "strict": true,
     "strictNullChecks": true,
     "skipLibCheck": true
-  }
+  },
+  "exclude": [
+    "src/database/messagesCounted.ts",
+    "src/database/prompts.ts",
+    "src/database/writers.ts",
+    "src/server-migrate.ts",
+    "src/textCommands/initialize.ts",
+    "src/textCommands/initializePrompts.ts"
+  ]
 }

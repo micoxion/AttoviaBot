@@ -1,8 +1,8 @@
 export type Writer = {
-    userId: string,
+    userid: string,
     username: string,
     streak: number,
-    longestStreak: number,
-    wordCount: number,
-    lastTimeWrote: Date | null
+    longeststreak: number,
+    wordcount: number,
+    lasttimewrote: Date | null
 }

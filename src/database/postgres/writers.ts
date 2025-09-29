@@ -1,15 +1,14 @@
-import pool from '../database'
+import pool from '../database.js'
 import dotenv from 'dotenv'
-import { Writer } from '../../ABTypes/Writer'
+import { Writer } from '../../ABTypes/Writer.js'
 import { Message } from 'discord.js';
-import { logToFile } from '../../utilities/logger';
-
+import { logToFile } from '../../utilities/logger.js';
 dotenv.config()
 
 async function addWriter(writerData: Writer) {
     const sql = "INSERT INTO public.\"Writers\" (userid, username, streak, longeststreak, wordcount, lasttimewrote) " +
               "VALUES ($1, $2, $3, $4, $5, $6) RETURNING *";
-    const values = [writerData.userId, writerData.username, writerData.streak || 0, writerData.longestStreak || 0, writerData.wordCount || 0, writerData.lastTimeWrote || new Date(0)]
+    const values = [writerData.userid, writerData.username, writerData.streak || 0, writerData.longeststreak || 0, writerData.wordcount || 0, writerData.lasttimewrote || new Date(0)]
     const client = await pool.connect()
     try {
         const res = await client.query(sql, values)
@@ -24,13 +23,14 @@ export async function getWriterByUserId(userId: string, username: string): Promi
     const client = await pool.connect()
     try {
         const res = await client.query(sql)
+        console.log(res)
         if (res.rowCount == 0) {
             const writer = await addWriter({
-                userId: userId, username: username,
+                userid: userId, username: username,
                 streak: 0,
-                longestStreak: 0,
-                wordCount: 0,
-                lastTimeWrote: null
+                longeststreak: 0,
+                wordcount: 0,
+                lasttimewrote: null
             })
             return writer;
         } else {
@@ -65,6 +65,7 @@ async function updateColumns(userId: string, columnNames: string[], columns: any
     columns.push(userId)
 
     let sql = "UPDATE public.\"Writers\" SET " + columnString + "\nWHERE userid = $" + userIdIndex.toString() + "\nRETURNING *"
+    console.log(sql)
     const client = await pool.connect()
     try {
         const res = await client.query(sql, columns)
@@ -81,7 +82,7 @@ export async function updateStreak(userId: string, username: string, message: Me
         throw("Couldn't find writer with id: " + userId)
     }
 
-    let lastTimeWrote = writer.lastTimeWrote
+    let lastTimeWrote = writer.lasttimewrote
     let messageDate = message.createdAt
     let today = new Date()
     let isToday = today.setHours(0, 0, 0, 0) == messageDate.setHours(0, 0, 0, 0)
@@ -91,11 +92,11 @@ export async function updateStreak(userId: string, username: string, message: Me
     if (lastTimeWrote == null) {
         if (isToday) {
             writer.streak = 1;
-            writer.lastTimeWrote = new Date(message.createdTimestamp)
+            writer.lasttimewrote = new Date(message.createdTimestamp)
             //await writer.save();
             //await writer.updateOne({ _id: currentWriter._id }, { $set: {lastTimeWrote: messageDate }})
             //return "\nLooks like this is the first time you've tracked a message on the current day, time to start a streak!";
-            await updateColumns(userId, ["streak", "lasttimewrote"], [1, writer.lastTimeWrote])
+            await updateColumns(userId, ["streak", "lasttimewrote"], [1, writer.lasttimewrote])
             return "\nLooks like this is the first time you've tracked a message on the current day, time to start a streak!";
         }
         else {
@@ -104,21 +105,21 @@ export async function updateStreak(userId: string, username: string, message: Me
             return "";
         }
     }
-
+    lastTimeWrote = new Date(lastTimeWrote)
     let daysDiff = Math.floor((today.getTime() - lastTimeWrote.getTime()) / (36e5 * 24))
     let isStreakDead = daysDiff > 1
     //let isStreakActive = daysDiff == 0
     let shouldStreakContinue = daysDiff == 1
     if (lastTimeWrote < messageDate) {
-        writer.lastTimeWrote = messageDate
+        writer.lasttimewrote = messageDate
     }
     if (shouldStreakContinue) {        
         writer.streak += 1        
-        if (writer.streak > writer.longestStreak) {
-            writer.longestStreak = writer.streak;
+        if (writer.streak > writer.longeststreak) {
+            writer.longeststreak = writer.streak;
         }
         //await currentWriter.save();
-        await updateColumns(userId, ["streak", "longeststreak"], [writer.streak, writer.longestStreak])
+        await updateColumns(userId, ["streak", "longeststreak"], [writer.streak, writer.longeststreak])
         return "\nNice job! Your streak grows and is now " + writer.streak + " days!";
     }
     if (isStreakDead) {
@@ -133,7 +134,8 @@ export async function updateStreak(userId: string, username: string, message: Me
 export async function updateWordCount(userId: string, words: number, username: string) {
     console.log("From updateWordCount: ", userId)
         const writer: Writer = await getWriterByUserId(userId, username)
-        let newWordCount = writer.wordCount + words;
+        let newWordCount = parseInt(writer.wordcount.toString()) + words;
+        console.log(newWordCount, writer.wordcount, " + ", words)
         await updateColumns(userId, ["wordcount"], [newWordCount])
         //const result = await WriterModel.updateOne({userId: userId}, {$inc: {wordCount: words}})
         //const updatedWordCount = await WriterModel.findOne({userId: userId})

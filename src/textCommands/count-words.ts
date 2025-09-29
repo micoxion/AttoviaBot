@@ -1,15 +1,15 @@
 import { Message } from "discord.js";
 
-import { countWords } from '../utilities/word-counter';
-import { updateWordCount, updateStreak } from '../database/postgres/writers';
-import { hasMessageBeenCounted, recordMessageTracked } from '../database/postgres/messagesCounted';
-import { logToFile } from '../utilities/logger';
+import { countWords } from '../utilities/word-counter.js';
+import { updateWordCount, updateStreak } from '../database/postgres/writers.js';
+import { hasMessageBeenCounted, recordMessageTracked } from '../database/postgres/messagesCounted.js';
+import { logToFile } from '../utilities/logger.js';
 import { createWorker } from 'tesseract.js';
 import { EmbedBuilder } from 'discord.js';
 
 let countMessageWords = async function(message: Message) {
     let wordCount = countWords(message.content)
-    await recordMessageTracked(message.id, message.author.id, message.author.username)
+    await recordMessageTracked(message.id)
     let newWordCount = await updateWordCount(message.author.id, wordCount, message.author.username)
     let messageAddition = await updateStreak(message.author.id, message.author.username, message)
     let embed = new EmbedBuilder()
@@ -84,7 +84,7 @@ export async function countAttachmentWords(message: Message) {
         //logToFile("Tracking build Together image post: " + thread.name + " | Message: " + message.id);
         let newWordCount = await updateWordCount(message.author.id, wordCountTotal, message.author.username)
         logToFile("Updated word count for " + message.author.username)
-        await recordMessageTracked(message.id, message.author.id, message.author.username)
+        await recordMessageTracked(message.id)
         logToFile("Message successfully tracked")
         await fetchedMessage.react("✅");
         logToFile(`${message.author.username} : ${message.author.id}\n

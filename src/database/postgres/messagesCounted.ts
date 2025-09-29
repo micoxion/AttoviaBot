@@ -1,5 +1,5 @@
-import pool from '../database'
-import { getWriterByUserId } from './writers';
+import pool from '../database.js'
+//import { getWriterByUserId } from './writers';
 
 export async function getMessageByMessageId(messageId: string) {
     let sql = "SELECT * FROM public.\"MessagesCounted\" WHERE messageid = '" + messageId + "'";

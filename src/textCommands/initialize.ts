@@ -1,10 +1,11 @@
 import { Client, Collection, ForumChannel, Message } from "discord.js"
-
-import { guildId, BTTags, SWTags } from '../../config.json'
+import { createRequire } from 'node:module';
+const require = createRequire(import.meta.url);
+const { guildId, BTTags, SWTags } = require('../../config.json')// with { type: 'json' }
 import { hasMessageBeenCounted, recordMessageTracked } from '../database/postgres/messagesCounted.js'
 import { updateWordCount } from '../database/postgres/writers.js'
-import { countWords } from '../utilities/word-counter'
-import { logToFile } from '../utilities/logger'
+import { countWords } from '../utilities/word-counter.js'
+import { logToFile } from '../utilities/logger.js'
 
 let total = 0
 
@@ -23,7 +24,7 @@ async function trackMessage(messages: Collection<string, Message<boolean>>) {
     }
     await updateWordCount(user.id, countWords(messageContent), user?.username)
     logToFile("Updated word count")
-    await recordMessageTracked(messageId, user.id, user.username)        
+    await recordMessageTracked(messageId)
     logToFile("Recorded message tracked")
     await messages.at(-1)?.react("✅")
     logToFile(`${user?.username} : ${user?.id}\n

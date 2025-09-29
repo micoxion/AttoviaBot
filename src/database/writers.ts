@@ -1,8 +1,8 @@
 import { MongoClient, Timestamp } from 'mongodb';
-import { logToFile } from '../utilities/logger';
+import { logToFile } from '../utilities/logger.js';
 
 import mongoose from 'mongoose';
-import { Writer } from '../ABTypes/Writer';
+import { Writer } from '../ABTypes/Writer.js';
 import { Message } from 'discord.js';
 
 require('dotenv').config(); 
