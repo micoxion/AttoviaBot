@@ -107,6 +107,7 @@ export async function updateStreak(userId: string, username: string, message: Me
     }
     lastTimeWrote = new Date(lastTimeWrote)
     let daysDiff = Math.floor((today.getTime() - lastTimeWrote.getTime()) / (36e5 * 24))
+    console.log(lastTimeWrote, " : ", daysDiff)
     let isStreakDead = daysDiff > 1
     //let isStreakActive = daysDiff == 0
     let shouldStreakContinue = daysDiff == 1
@@ -123,7 +124,7 @@ export async function updateStreak(userId: string, username: string, message: Me
         return "\nNice job! Your streak grows and is now " + writer.streak + " days!";
     }
     if (isStreakDead) {
-        writer.streak = isToday ? 1 : 0
+        writer.streak = 1
         await updateColumns(userId, ["streak"], [writer.streak])
         //await currentWriter.save();
         return "\nYou have started a new streak of " + writer.streak + " day!";

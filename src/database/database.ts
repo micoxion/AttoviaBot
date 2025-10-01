@@ -6,11 +6,12 @@ dotenv.config()
 
 // PostgreSQL connection pool configuration using environment variables
 const pool = new Pool({
-    host: process.env.POSTGRES_HOST,
-    user: process.env.POSTGRES_USER,
-    port: Number(process.env.POSTGRES_PORT || ""),
-    password: process.env.POSTGRES_PASS,
-    database: process.env.POSTGRES_DATABASE
+    user: process.env.POSTGRES_LC_USER,
+    password: process.env.POSTGRES_LC_PASSWORD,
+    host: process.env.POSTGRES_LC_HOST,
+    port: Number(process.env.POSTGRES_LC_PORT || ""),
+    database: process.env.POSTGRES_LC_DATABASE,
+    ssl: true
 })
 
 /**

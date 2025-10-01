@@ -217,7 +217,7 @@ client.on('threadCreate', async (thread: ThreadChannel)  => {
 
 client.on('guildMemberAdd', async (member) => {
   logToFile("PERSON JOINING GUILD: " + member.toString())
-  const welcomeChannel = await member.guild.channels.fetch(welcomeChannelId) as TextChannel
+  const welcomeChannel = member.guild.channels.cache.get(welcomeChannelId) as TextChannel
   // const textDisplay = new TextDisplayBuilder()
   //   .setContent("Hello <@"+member.id+">! Someone will be along shortly to welcome you properly, in the meantime feel free to get the lay of the land with my /server-info command!");
   //   const thumbnail = new ThumbnailBuilder()
