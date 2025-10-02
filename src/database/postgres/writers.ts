@@ -6,7 +6,7 @@ import { logToFile } from '../../utilities/logger.js';
 dotenv.config()
 
 async function addWriter(writerData: Writer) {
-    const sql = "INSERT INTO public.\"Writers\" (userid, username, streak, longeststreak, wordcount, lasttimewrote) " +
+    const sql = "INSERT INTO Writers (userid, username, streak, longeststreak, wordcount, lasttimewrote) " +
               "VALUES ($1, $2, $3, $4, $5, $6) RETURNING *";
     const values = [writerData.userid, writerData.username, writerData.streak || 0, writerData.longeststreak || 0, writerData.wordcount || 0, writerData.lasttimewrote || new Date(0)]
     const client = await pool.connect()
@@ -19,7 +19,7 @@ async function addWriter(writerData: Writer) {
 }
 
 export async function getWriterByUserId(userId: string, username: string): Promise<Writer> {
-    const sql = `SELECT * FROM public.\"Writers\" WHERE userid = '${userId}'`
+    const sql = `SELECT * FROM Writers WHERE userid = '${userId}'`
     const client = await pool.connect()
     try {
         const res = await client.query(sql)
@@ -42,7 +42,7 @@ export async function getWriterByUserId(userId: string, username: string): Promi
 }
 
 export async function getAllWriters() {
-    const sql = "SELECT * FROM public.\"Writers\""
+    const sql = "SELECT * FROM Writers"
     const client = await pool.connect()
     try {
         const res = await client.query(sql)
@@ -64,7 +64,7 @@ async function updateColumns(userId: string, columnNames: string[], columns: any
     let userIdIndex = columns.length + 1
     columns.push(userId)
 
-    let sql = "UPDATE public.\"Writers\" SET " + columnString + "\nWHERE userid = $" + userIdIndex.toString() + "\nRETURNING *"
+    let sql = "UPDATE Writers SET " + columnString + "\nWHERE userid = $" + userIdIndex.toString() + "\nRETURNING *"
     console.log(sql)
     const client = await pool.connect()
     try {
@@ -84,6 +84,7 @@ export async function updateStreak(userId: string, username: string, message: Me
 
     let lastTimeWrote = writer.lasttimewrote
     let messageDate = message.createdAt
+    let messageTimestamp = message.createdTimestamp
     let today = new Date()
     let isToday = today.setHours(0, 0, 0, 0) == messageDate.setHours(0, 0, 0, 0)
     let returnMessage = ""
@@ -93,6 +94,7 @@ export async function updateStreak(userId: string, username: string, message: Me
         if (isToday) {
             writer.streak = 1;
             writer.lasttimewrote = new Date(message.createdTimestamp)
+            logToFile("Last time wrote after timestamp conversion: " + writer.lasttimewrote)
             //await writer.save();
             //await writer.updateOne({ _id: currentWriter._id }, { $set: {lastTimeWrote: messageDate }})
             //return "\nLooks like this is the first time you've tracked a message on the current day, time to start a streak!";
@@ -112,7 +114,8 @@ export async function updateStreak(userId: string, username: string, message: Me
     //let isStreakActive = daysDiff == 0
     let shouldStreakContinue = daysDiff == 1
     if (lastTimeWrote < messageDate) {
-        writer.lasttimewrote = messageDate
+        writer.lasttimewrote = new Date(messageTimestamp)
+        console.log("Last time wrote after timestamp conversion: " + writer.lasttimewrote)
     }
     if (shouldStreakContinue) {        
         writer.streak += 1        
@@ -120,12 +123,12 @@ export async function updateStreak(userId: string, username: string, message: Me
             writer.longeststreak = writer.streak;
         }
         //await currentWriter.save();
-        await updateColumns(userId, ["streak", "longeststreak"], [writer.streak, writer.longeststreak])
+        await updateColumns(userId, ["streak", "longeststreak", "lasttimewrote"], [writer.streak, writer.longeststreak, writer.lasttimewrote])
         return "\nNice job! Your streak grows and is now " + writer.streak + " days!";
     }
     if (isStreakDead) {
         writer.streak = 1
-        await updateColumns(userId, ["streak"], [writer.streak])
+        await updateColumns(userId, ["streak", "lasttimewrote"], [writer.streak, writer.lasttimewrote])
         //await currentWriter.save();
         return "\nYou have started a new streak of " + writer.streak + " day!";
     }

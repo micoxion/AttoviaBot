@@ -44,7 +44,8 @@ const client = new Client({
     intents: [ 
         GatewayIntentBits.Guilds,  
         GatewayIntentBits.GuildMessages,  
-        GatewayIntentBits.MessageContent] 
+        GatewayIntentBits.MessageContent,
+        GatewayIntentBits.GuildMembers] 
     }); 
 
 let commands: Collection<string, CustomCommand> = new Collection();
@@ -135,12 +136,12 @@ client.on('threadCreate', async (thread: ThreadChannel)  => {
   if (thread.parent.id === BTForumId && !thread.appliedTags.includes(BTTags.PromptSuggestion) && !thread.appliedTags.includes(BTTags.MetaDiscussion)) {
     //must wait to ensure the forum post's starter message is properly available in the API
     await new Promise(resolve => setTimeout(resolve, 2000))
-    let message = await thread.fetchStarterMessage() //messages.values().toArray()[0];
+    let message = await thread.fetchStarterMessage().catch((reason) => {console.log(reason)}) //messages.values().toArray()[0];
     let maxRetry = 10
     let tries = 0
     while (message == null && tries < maxRetry) {
       await new Promise(resolve => setTimeout(resolve, 500))
-      message = await thread.fetchStarterMessage()
+      message = await thread.fetchStarterMessage().catch((reason) => {console.log(reason)})
       tries++;
     }
     if (message == null) {
@@ -174,12 +175,12 @@ client.on('threadCreate', async (thread: ThreadChannel)  => {
   }
   if (thread.parent.id === SWForumId && !thread.appliedTags.includes(SWTags.MetaDiscussion)) {
     await new Promise(resolve => setTimeout(resolve, 1000))
-    let message = await thread.fetchStarterMessage() //messages.values().toArray()[0];
+    let message = await thread.fetchStarterMessage().catch((reason) => {console.log(reason)}) //messages.values().toArray()[0];
     let maxRetry = 10
     let tries = 0
     while (message == null && tries < maxRetry) {
       await new Promise(resolve => setTimeout(resolve, 500))
-      message = await thread.fetchStarterMessage()
+      message = await thread.fetchStarterMessage().catch((reason) => {console.log(reason)})
       tries++;
     }
     if (message == null) {

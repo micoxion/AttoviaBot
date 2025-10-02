@@ -15,6 +15,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
                         "### Slash Commands\n" +
                         "- /commands: You're lookin at it! :)\n" +
                         "- /countwords: Counts the words in the linked message. Requires a full message link as a parameter.\n" +
+                        "- /count-attachment-words: Counts the words in the attachments on the linked message. Requires a full message link as a parameter.\n" +
                         "- /status (user): Outputs an embed with the information of the user supplied or of the initial user of the command if no user parameter is supplied.\n" +
                         "- /prompt (day): Get a random Build Together prompt for the day specified.\n" +
                         "- /random-prompt: Get a random Build Together prompt.")

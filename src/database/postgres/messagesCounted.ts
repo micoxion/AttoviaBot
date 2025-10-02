@@ -2,7 +2,7 @@ import pool from '../database.js'
 //import { getWriterByUserId } from './writers';
 
 export async function getMessageByMessageId(messageId: string) {
-    let sql = "SELECT * FROM public.\"MessagesCounted\" WHERE messageid = '" + messageId + "'";
+    let sql = "SELECT * FROM MessagesCounted WHERE messageid = '" + messageId + "'";
     const client = await pool.connect()
     try {
         let res = await client.query(sql);
@@ -35,7 +35,7 @@ export async function hasMessageBeenCounted(messageId: string): Promise<boolean>
 // }
 
 export async function recordMessageTracked(messageId: string) {
-    let sql = "INSERT INTO public.\"MessagesCounted\" (messageid) VALUES ('" + messageId + "')"
+    let sql = "INSERT INTO MessagesCounted (messageid) VALUES ('" + messageId + "')"
     console.log(sql)
     const client = await pool.connect()
     try {

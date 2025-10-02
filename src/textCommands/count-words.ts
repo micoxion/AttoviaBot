@@ -62,7 +62,15 @@ export async function countAttachmentWords(message: Message) {
         await message.reply("Please make sure to reply to a message you wrote that you wish to count the words in!");
         return;
     }
+    let embed = new EmbedBuilder()
+            .setColor(0xc57bf3)
     let fetchedMessage = await message.fetchReference();
+    let alreadyCounted = await hasMessageBeenCounted(fetchedMessage.id);
+    if (alreadyCounted) {
+        embed.setDescription("Looks like you've already counted the words for that message!")
+        await message.reply({embeds: [embed]});
+        return;
+    }
     if (fetchedMessage.author.id != message.author.id) {
         await message.reply("You didn't write that message! Please only count words in messages you have written :)");
         return;
@@ -90,9 +98,7 @@ export async function countAttachmentWords(message: Message) {
         logToFile(`${message.author.username} : ${message.author.id}\n
                 Message ID: ${message.id} | Wordcount = ${wordCountTotal}`)
         let reply = await updateStreak(message.author.id, message.author.username, fetchedMessage)
-        let embed = new EmbedBuilder()
-            .setColor(0xc57bf3)
-            .setTitle(message.author.username + '\'s words counted.')
+        embed.setTitle(message.author.username + '\'s words counted.')
             .setDescription(wordCountTotal + " words added to your total! Your new wordcount is: " + newWordCount + reply)
         await message.reply({embeds: [embed]})//wordCountTotal + " words added to your total! Your new wordcount is: " + newWordCount + reply)
         return

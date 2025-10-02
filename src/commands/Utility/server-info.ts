@@ -94,6 +94,18 @@ export async function execute(interaction: ChatInputCommandInteraction) {
                 "- <#1335010811516555274> Share maps and art from your setting(s)!\n" +
                 "- <#1374429330012115056> Have a question about someone's setting/world? Ask them here!\n" +
                 "- <#1376960471554457671> Currently an unnused project similar to Shoutout Saturday that never took off!"
+            },
+            {
+                name: "🐲 Dungeon Mastery 🎲",
+                value:
+                "- <#1402798909830463579> Share your homebrews for any TTRPG system here with the community!\n" +
+                "- <#1333853327414526073> For all things TTRPG discussion! Keep it civil, but go ham >.<\n" +
+                "- <#1333853418854289469> For sharing advice with your fellow DM/GMs!\n" +
+                "- <#1332766498649014313> Show us what tools you use when running TTRPGs!\n" +
+                "- <#1332786726447612096> Chat about more niche stuff here! Gone are the 5th Editions and Pathfinders from this blessed place :P\n" +
+                "- <#1232406679820173372> Anything DM/GM oriented you find neat!\n" +
+                "- <#1232407610842681344> A less organized way to share homebrews.\n" +
+                "- <#1344422315982717021> Want advice from fellow DM/GMs? Ask here!"
             }
         )
 

@@ -1,9 +1,5 @@
 import { escapeLiteral } from 'pg';
 import pool from './database/database.js'
-import { getAllPrompts } from './database/prompts.js';
-import { addPrompt } from './database/prompts.js';
-import { getAllWriters, getWriterByUserId, updateWordCount } from './database/writers.js';
-import { getAllMessagesCounted } from './database/messagesCounted.js';
 import { recordMessageTracked } from './database/postgres/messagesCounted.js';
 import { ChannelType, Client, GatewayIntentBits, managerToFetchingStrategyOptions, Message, TextChannel } from 'discord.js';
 import dotenv from 'dotenv'
@@ -142,8 +138,8 @@ async function migrateLocalPSQLMessagesCountedToLeapCell() {
 }
 
 //migrateLocalPSQLWritersToLeapCell()
-migrateLocalPSQLPromptsToLeapCell()
-migrateLocalPSQLMessagesCountedToLeapCell()
+//migrateLocalPSQLPromptsToLeapCell()
+//migrateLocalPSQLMessagesCountedToLeapCell()
 
 //import { guildId } from '../config.json'
 
