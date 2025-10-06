@@ -115,7 +115,7 @@ export async function updateStreak(userId: string, username: string, message: Me
     let shouldStreakContinue = daysDiff == 1
     if (lastTimeWrote < messageDate) {
         writer.lasttimewrote = new Date(messageTimestamp)
-        console.log("Last time wrote after timestamp conversion: " + writer.lasttimewrote)
+        console.log("Last time wrote after timestamp conversion: " + writer.lasttimewrote + "is streak dead: " + isStreakDead + " | days diff: ", daysDiff)
     }
     if (shouldStreakContinue) {        
         writer.streak += 1        
@@ -132,17 +132,18 @@ export async function updateStreak(userId: string, username: string, message: Me
         //await currentWriter.save();
         return "\nYou have started a new streak of " + writer.streak + " day!";
     }
+    await updateColumns(userId, ["lasttimewrote"], [writer.lasttimewrote])
     return "";
 }
 
 export async function updateWordCount(userId: string, words: number, username: string) {
     console.log("From updateWordCount: ", userId)
-        const writer: Writer = await getWriterByUserId(userId, username)
-        let newWordCount = parseInt(writer.wordcount.toString()) + words;
-        console.log(newWordCount, writer.wordcount, " + ", words)
-        await updateColumns(userId, ["wordcount"], [newWordCount])
-        //const result = await WriterModel.updateOne({userId: userId}, {$inc: {wordCount: words}})
-        //const updatedWordCount = await WriterModel.findOne({userId: userId})
-        logToFile("updated word count for " + username + " which is now " + newWordCount)
-        return newWordCount
+    const writer: Writer = await getWriterByUserId(userId, username)
+    let newWordCount = parseInt(writer.wordcount.toString()) + words;
+    console.log(newWordCount, writer.wordcount, " + ", words)
+    await updateColumns(userId, ["wordcount"], [newWordCount])
+    //const result = await WriterModel.updateOne({userId: userId}, {$inc: {wordCount: words}})
+    //const updatedWordCount = await WriterModel.findOne({userId: userId})
+    logToFile("updated word count for " + username + " which is now " + newWordCount)
+    return newWordCount
 }

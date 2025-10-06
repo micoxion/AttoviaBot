@@ -7,7 +7,7 @@ import { getRandomPrompt } from './database/postgres/prompts.js';
 import fs from 'node:fs';
 import path from 'node:path';
 import url from 'url'
-import { Client, Collection, Events, GatewayIntentBits, MessageFlags, ChannelType, EmbedBuilder, Interaction, TextChannel, SectionBuilder, ActivityType } from 'discord.js'; 
+import { Client, Collection, Events, GatewayIntentBits, MessageFlags, ChannelType, EmbedBuilder, Interaction, TextChannel, SectionBuilder, ActivityType, ContainerBuilder } from 'discord.js'; 
 import { handleDailyPromptMessage } from './messageListeners/daily-prompt.js';
 import { countAttachmentWords, countRepliedMessageWords } from './textCommands/count-words.js';
 //import { initialize } from './textCommands/initialize.js';
@@ -23,6 +23,9 @@ import { updateWordCount, updateStreak } from './database/postgres/writers.js';
 import { countWords } from './utilities/word-counter.js';
 import { logToFile } from './utilities/logger.js';
 import { recordMessageTracked } from './database/postgres/messagesCounted.js';
+import { buildErrorContainer } from './commenContainers/Error.js';
+import { buildMistakeContainer } from './commenContainers/Mistake.js';
+import { buildSuccessContainer } from './commenContainers/Success.js';
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
 require('dotenv').config(); 
@@ -122,11 +125,12 @@ async function trackWords(thread: ThreadChannel, message: Message, wordCountToAd
           Message ID: ${message.id} | Wordcount = ${wordCountToAdd}
               \n${message.content}`)
   let reply = await updateStreak(message.author.id, message.author.username, message)
-  let embed = new EmbedBuilder()
-        .setColor(0xc57bf3)
-        .setTitle(message.author.username + '\'s words counted.')
-        .setDescription(wordCountToAdd + " words added to your total! Your new wordcount is: " + newWordCount + reply)
-  await thread.send({embeds: [embed]})//wordCountToAdd + " words added to your total! Your new wordcount is: " + newWordCount + reply)
+  let container = buildSuccessContainer("<@" + message.author.id + "> " + wordCountToAdd + " words added to your total! Your new wordcount is: " + newWordCount + reply)
+  // let embed = new EmbedBuilder()
+  //       .setColor(0xc57bf3)
+  //       .setTitle(message.author.username + '\'s words counted.')
+  //       .setDescription(wordCountToAdd + " words added to your total! Your new wordcount is: " + newWordCount + reply)
+  await thread.send({components: [container], flags: MessageFlags.IsComponentsV2})//wordCountToAdd + " words added to your total! Your new wordcount is: " + newWordCount + reply)
 }
 
 client.on('threadCreate', async (thread: ThreadChannel)  => {
@@ -163,10 +167,11 @@ client.on('threadCreate', async (thread: ThreadChannel)  => {
         wordCountTotal += countWords(ret.data.text);
       }
       logToFile("Tracking build Together image post: " + thread.name + " | Message: " + message.id);
-      trackWords(thread, message, wordCountTotal)
+      await trackWords(thread, message, wordCountTotal)
       return
     } else if (message.content == undefined || message.content == "") {
-      await thread.send("I saw no words to count, if you supplied a screenshot with some writing make sure you use the Screenshot tag!");
+      let container = buildMistakeContainer("I saw no words to count, if you supplied a screenshot with some writing make sure you use the Screenshot tag!")
+      await thread.send({components: [container], flags: MessageFlags.IsComponentsV2});
       return
     }
     let wordCount = countWords(message.content)
@@ -233,8 +238,9 @@ client.on('guildMemberAdd', async (member) => {
         .setDescription("Cute profile pic of AttoviaBot smiling")
         .setURL(client.user?.avatarURL() || "")
     )
+  const container = new ContainerBuilder().addSectionComponents(section)
   if (welcomeChannel) {
-    await welcomeChannel.send({components: [section], flags: MessageFlags.IsComponentsV2})
+    await welcomeChannel.send({components: [container], flags: MessageFlags.IsComponentsV2})
   }
 })
 
@@ -265,6 +271,14 @@ client.on('messageCreate', async (message: Message) => {
   // if (message.content.startsWith("!ab prompts init") && message.author.id == siroxionId) {
   //   await initializePrompts(client)
   // }
+
+  if (message.content.startsWith("!ab test") && message.author.username == "siroxion") {
+    let component = buildErrorContainer("Uh oh! Something went wrong!", "Test info.")
+    message.reply({
+      components: [component],
+      flags: MessageFlags.IsComponentsV2
+    })
+  } 
 
   if (message.content.startsWith("!ab random prompt")) {
     let prompt = await getRandomPrompt()

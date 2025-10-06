@@ -1,4 +1,4 @@
-import { ChatInputCommandInteraction, EmbedBuilder, Options, SlashCommandStringOption } from "discord.js";
+import { ChatInputCommandInteraction, EmbedBuilder, MessageFlags, Options, SlashCommandStringOption } from "discord.js";
 
 import { SlashCommandBuilder } from 'discord.js';
 import { updateWordCount, updateStreak } from "../../database/postgres/writers.js";
@@ -6,6 +6,9 @@ import { hasMessageBeenCounted, recordMessageTracked } from "../../database/post
 import { logToFile } from "../../utilities/logger.js";
 import { createWorker } from "tesseract.js";
 import { countWords } from "../../utilities/word-counter.js";
+import { buildErrorContainer } from "../../commenContainers/Error.js";
+import { buildMistakeContainer } from "../../commenContainers/Mistake.js";
+import { buildSuccessContainer } from "../../commenContainers/Success.js";
 
 export let data = new SlashCommandBuilder()
         .setName("count-attachment-words")
@@ -23,26 +26,28 @@ export async function execute(interaction: ChatInputCommandInteraction) {
     let embed = new EmbedBuilder()
         .setColor(0xc57bf3)
     if (messageSplit == null) {
-        embed.setDescription("Uh oh! Something went wrong, feel free to ping <@331634391790911488> and let him know!")
-        await interaction.reply({embeds: [embed]})
+        //embed.setDescription("Uh oh! Something went wrong, feel free to ping <@331634391790911488> and let him know!")
+        let container = buildErrorContainer("Uh oh! Something went wrong, feel free to ping <@331634391790911488> and let him know!", "Message link: " + messageLink + "\n channel: " + channel?.toString())
+        await interaction.reply({components: [container], flags: MessageFlags.IsComponentsV2})
         return;
     }
     const messageId = messageSplit[messageSplit.length - 1]
     let fetchedMessage = await channel?.messages.fetch(messageId)
     if (fetchedMessage == undefined) {
-        embed.setDescription("Something went wrong and that message could not be found!")
-        await interaction.reply({embeds: [embed]});
+        let container = buildErrorContainer("Something went wrong and that message could not be found!", "Message link: " + messageLink + "\n Message id: " + messageId)
+        await interaction.reply({components: [container], flags: MessageFlags.IsComponentsV2});
         return;
     }
     let alreadyCounted = await hasMessageBeenCounted(fetchedMessage.id)
     if (alreadyCounted) {
-        embed.setDescription("Looks like that message's content has already been counted!")
-        await interaction.reply({embeds: [embed]})
+        let container = buildMistakeContainer("Looks like that message's content has already been counted!")
+        await interaction.reply({components: [container], flags: MessageFlags.IsComponentsV2});
         return;
     }
     if (interaction.user.id != fetchedMessage.author.id) {
-        embed.setDescription("Hey that's not your message! Please only request counts of your own writing :)")
-        await interaction.reply({embeds: [embed]})
+        let container = buildMistakeContainer("Hey that's not your message! Please only request counts of your own writing :)")
+        await interaction.reply({components: [container], flags: MessageFlags.IsComponentsV2});
+        return;
     }
     logToFile("Attempting to count words in message attachments for message: " + fetchedMessage.url);
     const attachments = fetchedMessage.attachments
@@ -66,10 +71,9 @@ export async function execute(interaction: ChatInputCommandInteraction) {
         await fetchedMessage.react("✅");
         logToFile(`${fetchedMessage.author.username} : ${fetchedMessage.author.id}\n
                 Message ID: ${fetchedMessage.id} | Wordcount = ${wordCountTotal}`)
-        let reply = await updateStreak(fetchedMessage.author.id, fetchedMessage.author.username, fetchedMessage)
-        embed.setTitle(fetchedMessage.author.username + '\'s words counted.')
-            .setDescription(wordCountTotal + " words added to your total! Your new wordcount is: " + newWordCount + reply)
-        await interaction.reply({embeds: [embed]})//wordCountTotal + " words added to your total! Your new wordcount is: " + newWordCount + reply)
+        let reply = await updateStreak(fetchedMessage.author.id, fetchedMessage.author.username, fetchedMessage)        
+        let container = buildSuccessContainer("<@"+interaction.user.id+"> your words successfully counted!\n" + wordCountTotal + " words added to your total! Your new wordcount is: " + newWordCount + reply)
+        await interaction.reply({components: [container], flags: MessageFlags.IsComponentsV2})//wordCountTotal + " words added to your total! Your new wordcount is: " + newWordCount + reply)
         return
     }    
 }
