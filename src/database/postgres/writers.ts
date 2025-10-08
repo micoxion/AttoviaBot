@@ -112,7 +112,7 @@ export async function updateStreak(userId: string, username: string, message: Me
     console.log(lastTimeWrote, " : ", daysDiff)
     let isStreakDead = daysDiff > 1
     //let isStreakActive = daysDiff == 0
-    let shouldStreakContinue = daysDiff == 1
+    let shouldStreakContinue = today.getDay() != lastTimeWrote.getDay() && daysDiff < 2
     if (lastTimeWrote < messageDate) {
         writer.lasttimewrote = new Date(messageTimestamp)
         console.log("Last time wrote after timestamp conversion: " + writer.lasttimewrote + "is streak dead: " + isStreakDead + " | days diff: ", daysDiff)
