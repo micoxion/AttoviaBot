@@ -28,10 +28,14 @@ import { buildMistakeContainer } from './commenContainers/Mistake.js';
 import { buildSuccessContainer } from './commenContainers/Success.js';
 import { handleForumPost } from './eventHandlers/handleForumPosts.js';
 import { welcomeMember } from './eventHandlers/welcomeMember.js';
+import { xpHandler } from './xpHandler.js';
+import { Player } from './Player/Player.js';
+import { getPlayerById, insertPlayer } from './database/postgres/players.js';
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
 require('dotenv').config(); 
-
+const Players: Map<string, Player> = new Map()
+const ActivePlayers: Map<Player, number> = new Map()
 // Create a new Discord client with message intent 
 const client = new Client({ 
     intents: [ 
@@ -78,6 +82,11 @@ client.once('clientReady', () => {
     }],
     status: 'online'
   })
+  setInterval(() => {
+    console.log("Applying xp to all active users")
+    xpHandler(client, ActivePlayers.keys())
+    ActivePlayers.clear()
+  }, 60000) //60000 milliseconds is 1 minute
 }); 
 
 client.on(Events.InteractionCreate, async (interaction: Interaction) => {
@@ -104,13 +113,33 @@ client.on(Events.InteractionCreate, async (interaction: Interaction) => {
   //console.log(interaction);
 });
 
+async function updateActivity(discordId: string, username: string) {
+  //console.log("Updating player activity: ", discordId, " | ", username)
+  const StoredPlayer = Players.get(discordId)
+  if (StoredPlayer) {    
+    ActivePlayers.set(StoredPlayer, 1)    
+    return;
+  } else {
+    let player = await getPlayerById(discordId) as Player
+    if (!player) {
+      player = new Player(discordId, username)
+      insertPlayer(player)
+    }
+    ActivePlayers.set(player, 1)
+    Players.set(discordId, player)
+    return;  
+  }  
+}
+
 client.on('threadCreate', handleForumPost)
 
 client.on('guildMemberAdd', welcomeMember)
 
 // Listen and respond to messages 
 client.on('messageCreate', async (message: Message) => { 
-
+  if (!client.user || message.author.id != client.user.id) {
+    await updateActivity(message.author.id, message.author.username)
+  }
   // Ignore messages from bots 
   if (message.author.bot) return; 
 
