@@ -34,10 +34,12 @@ export class Player implements MyschemaPlayers {
     }
 
     getStatusContainer(profpic: string): ContainerBuilder {
+        let row1 = `${this.charactername}: Level ${this.level}\n`
+        let row2 = `Progress to next level: ${this.xp}/${this.xp + this.xpNeeded(this.level)}`
         let container = new ContainerBuilder().addSectionComponents(
             section => section
                 .addTextDisplayComponents(
-                    textDisplay => textDisplay.setContent("XP: " + this.xp + "/" + (this.xp + this.xpNeeded(this.level)) + "\n")
+                    textDisplay => textDisplay.setContent(row1 + row2)
                 )
                 .setThumbnailAccessory(
                     thumbnail => thumbnail
