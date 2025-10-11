@@ -25,6 +25,6 @@ export async function execute(interaction: ChatInputCommandInteraction) {
         await interaction.reply({components: [container], flags: MessageFlags.IsComponentsV2})
         return;
     }
-    let container = player.getStatusContainer()
+    let container = player.getStatusContainer(user.avatarURL() || "")
     await interaction.reply({components: [container], flags: MessageFlags.IsComponentsV2})
 }
