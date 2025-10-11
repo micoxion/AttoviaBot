@@ -31,6 +31,7 @@ import { welcomeMember } from './eventHandlers/welcomeMember.js';
 import { xpHandler } from './xpHandler.js';
 import { Player } from './Player/Player.js';
 import { getPlayerById, insertPlayer } from './database/postgres/players.js';
+import { MyschemaPlayers } from 'kysely-codegen';
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
 require('dotenv').config(); 
@@ -120,11 +121,15 @@ async function updateActivity(discordId: string, username: string) {
     ActivePlayers.set(StoredPlayer, 1)    
     return;
   } else {
-    let player = await getPlayerById(discordId) as Player
-    if (!player) {
-      player = new Player(discordId, username)
-      insertPlayer(player)
+    let playerSchema: MyschemaPlayers | undefined = await getPlayerById(discordId)
+    if (!playerSchema) {
+      let newPlayer = new Player(discordId, username)
+      insertPlayer(newPlayer)
+      ActivePlayers.set(newPlayer, 1)
+      Players.set(discordId, newPlayer)
+      return;
     }
+    let player = Player.fromExisting(playerSchema)
     ActivePlayers.set(player, 1)
     Players.set(discordId, player)
     return;  
