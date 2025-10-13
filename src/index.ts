@@ -28,7 +28,7 @@ import { buildMistakeContainer } from './commenContainers/Mistake.js';
 import { buildSuccessContainer } from './commenContainers/Success.js';
 import { handleForumPost } from './eventHandlers/handleForumPosts.js';
 import { welcomeMember } from './eventHandlers/welcomeMember.js';
-import { xpHandler } from './xpHandler.js';
+import { addXpToOnePlayer as addXpToOnePlayer, xpHandler } from './xpHandler.js';
 import { Player } from './Player/Player.js';
 import { getPlayerById, insertPlayer } from './database/postgres/players.js';
 import { MyschemaPlayers } from 'kysely-codegen';
@@ -84,8 +84,8 @@ client.once('clientReady', () => {
     status: 'online'
   })
   setInterval(() => {
-    console.log("Applying xp to all active users")
-    xpHandler(client, ActivePlayers.keys())
+    //console.log("Resetting Active Players!")
+    //xpHandler(client, ActivePlayers.keys())
     ActivePlayers.clear()
   }, 60000) //60000 milliseconds is 1 minute
 }); 
@@ -117,8 +117,12 @@ client.on(Events.InteractionCreate, async (interaction: Interaction) => {
 async function updateActivity(discordId: string, username: string) {
   //console.log("Updating player activity: ", discordId, " | ", username)
   const StoredPlayer = Players.get(discordId)
+  if (StoredPlayer && ActivePlayers.has(StoredPlayer)) {
+    return;
+  }
   if (StoredPlayer) {    
-    ActivePlayers.set(StoredPlayer, 1)    
+    addXpToOnePlayer(client, StoredPlayer)
+    ActivePlayers.set(StoredPlayer, 1)
     return;
   } else {
     let playerSchema: MyschemaPlayers | undefined = await getPlayerById(discordId)
@@ -132,6 +136,7 @@ async function updateActivity(discordId: string, username: string) {
     let player = Player.fromExisting(playerSchema)
     ActivePlayers.set(player, 1)
     Players.set(discordId, player)
+    addXpToOnePlayer(client, player)
     return;  
   }  
 }
@@ -142,7 +147,7 @@ client.on('guildMemberAdd', welcomeMember)
 
 // Listen and respond to messages 
 client.on('messageCreate', async (message: Message) => { 
-  if (!client.user || message.author.id != client.user.id) {
+  if ((!client.user || message.author.id != client.user.id) && message.author.bot != true) {
     await updateActivity(message.author.id, message.author.username)
   }
   // Ignore messages from bots 
