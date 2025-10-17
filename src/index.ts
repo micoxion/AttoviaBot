@@ -32,6 +32,7 @@ import { addXpToOnePlayer as addXpToOnePlayer, xpHandler } from './xpHandler.js'
 import { Player } from './Player/Player.js';
 import { getPlayerById, insertPlayer } from './database/postgres/players.js';
 import { MyschemaPlayers } from 'kysely-codegen';
+import { validateGoodBot } from './messageListeners/validateGoodPrompt.js';
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
 require('dotenv').config(); 
@@ -165,6 +166,10 @@ client.on('messageCreate', async (message: Message) => {
 
   if (message.content.startsWith("!ab count")) {
     await countRepliedMessageWords(message)
+  }
+
+  if (message.content.toLocaleLowerCase().match(/good bot|good attoviabot|good attovia bot/g)) {    
+    await validateGoodBot(message, client)
   }
 
   // if (message.content.startsWith("!ab init") && message.author.id == siroxionId) {

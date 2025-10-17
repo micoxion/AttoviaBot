@@ -21,5 +21,8 @@
         "happy" : "https://i.imgur.com/dfxVMP4.png",
         "confused" : "https://i.imgur.com/nfxhMpf.png",
         "sad" : "https://i.imgur.com/B1SBDZe.png"
+    },
+    "CustomEmojiIds" : {
+        "meydalove" : ":MeydaLove:1373394976364433568"
     }
 }
