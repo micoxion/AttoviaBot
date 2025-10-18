@@ -26,6 +26,16 @@ export async function getAllPlayers() {
     .execute()
 }
 
+export async function getLeaderboardTopTen() {
+    return await db
+    .selectFrom('myschema.players')
+    .selectAll()
+    .orderBy('level', 'desc')
+    .orderBy('xp', 'desc')
+    .limit(10)
+    .execute()
+}
+
 export async function updatePlayer(discordid: string, player: Updateable<MyschemaPlayers>) {
     return await db
     .updateTable('myschema.players')

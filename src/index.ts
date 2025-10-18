@@ -79,8 +79,8 @@ client.once('clientReady', () => {
   console.log(`🤖 Logged in as ${client.user?.tag}`); 
   client.user?.setPresence({
     activities: [{
-      name: '/server-info',
-      type: ActivityType.Watching
+      name: '/commands',
+      type: ActivityType.Listening
     }],
     status: 'online'
   })
