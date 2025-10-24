@@ -144,7 +144,13 @@ async function updateActivity(discordId: string, username: string) {
 
 client.on('threadCreate', handleForumPost)
 
-client.on('guildMemberAdd', welcomeMember)
+//client.on('guildMemberAdd', welcomeMember)
+
+client.on('guildMemberUpdate', (before, after) => {
+  if (after.flags.has('CompletedOnboarding') && !before.flags.has('CompletedOnboarding')) {
+    welcomeMember(after)
+  }
+})
 
 // Listen and respond to messages 
 client.on('messageCreate', async (message: Message) => { 

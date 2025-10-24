@@ -29,5 +29,5 @@ export let data = new SlashCommandBuilder()
             )
             container.addSectionComponents(section)
         }
-        await interaction.reply({components: [container], flags: MessageFlags.IsComponentsV2})
+        await interaction.reply({components: [container], flags: MessageFlags.IsComponentsV2, allowedMentions: {users: [interaction.user.id]}})
     }

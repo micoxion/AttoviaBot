@@ -7,6 +7,7 @@ import { createWorker } from "tesseract.js";
 import { buildMistakeContainer } from "../commenContainers/Mistake.js";
 import { countWords } from "../utilities/word-counter.js";
 import { createRequire } from 'node:module';
+import { buildErrorContainer } from "../commenContainers/Error.js";
 const require = createRequire(import.meta.url);
 const { BTForumId, SWForumId, BTTags, SWTags } = require('../../config.json')
 
@@ -46,7 +47,8 @@ export async function handleForumPost(thread: ThreadChannel) {
       tries++;
     }
     if (message == null) {
-      await thread.send("Could not retrieve starter message of thread, please manually count the message. Sorry ;-;")
+      const errorContainer = buildErrorContainer("Could not retrieve starter message of thread, please manually count the message. Sorry ;-;")
+      await thread.send({components: [errorContainer], flags: MessageFlags.IsComponentsV2})
       return;
     }
     const attachments = message.attachments
@@ -86,7 +88,8 @@ export async function handleForumPost(thread: ThreadChannel) {
       tries++;
     }
     if (message == null) {
-      await thread.send("Could not retrieve starter message of thread, please manually count the message. Sorry ;-;")
+      const errorContainer = buildErrorContainer("Could not retrieve starter message of thread, please manually count the message. Sorry ;-;")
+      await thread.send({components: [errorContainer], flags: MessageFlags.IsComponentsV2})
       return;
     }
     const attachments = message.attachments
