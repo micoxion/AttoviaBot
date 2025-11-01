@@ -85,8 +85,6 @@ client.once('clientReady', () => {
     status: 'online'
   })
   setInterval(() => {
-    //console.log("Resetting Active Players!")
-    //xpHandler(client, ActivePlayers.keys())
     ActivePlayers.clear()
   }, 60000) //60000 milliseconds is 1 minute
 }); 
@@ -143,8 +141,6 @@ async function updateActivity(discordId: string, username: string) {
 }
 
 client.on('threadCreate', handleForumPost)
-
-//client.on('guildMemberAdd', welcomeMember)
 
 client.on('guildMemberUpdate', (before, after) => {
   if (after.flags.has('CompletedOnboarding') && !before.flags.has('CompletedOnboarding')) {
