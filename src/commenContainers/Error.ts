@@ -1,4 +1,7 @@
 import { Colors, Component, ContainerBuilder, EmbedBuilder, SectionBuilder, TextDisplayBuilder } from "discord.js";
+import { createRequire } from 'node:module';
+const require = createRequire(import.meta.url);
+const { ABPictures } = require('../../config.json')
 
 export function buildErrorContainer(str: string, info: string | undefined = undefined) {
     let container = new ContainerBuilder().addSectionComponents(
@@ -9,7 +12,7 @@ export function buildErrorContainer(str: string, info: string | undefined = unde
             .setThumbnailAccessory(
                 thumbnail => thumbnail
                     .setDescription("AttoviaBot looks sad")
-                    .setURL("https://i.imgur.com/B1SBDZe.png")
+                    .setURL(ABPictures.sadChristmas)
             )
     )
     .setAccentColor(Colors.Red)

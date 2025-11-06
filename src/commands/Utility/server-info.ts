@@ -1,4 +1,7 @@
 import { ChatInputCommandInteraction, SlashCommandBuilder, MessageFlags, ButtonStyle, APIMessageComponentEmoji, ActionRowData, EmbedBuilder, ActionRowBuilder, ButtonBuilder, Events, Interaction, ContainerBuilder, ThumbnailBuilder } from "discord.js";
+import { createRequire } from 'node:module';
+const require = createRequire(import.meta.url);
+const { ABPictures } = require('../../../config.json')
 
 export let data = new SlashCommandBuilder()
         .setName("server-info")
@@ -42,7 +45,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
             .setThumbnailAccessory(
                 thumbnail => thumbnail
                     .setDescription("AttoviaBot looks happy")
-                    .setURL("https://i.imgur.com/dfxVMP4.png")
+                    .setURL(ABPictures.happyChristmas)
             )
     )
     .setAccentColor(0xc57bf3)
@@ -95,7 +98,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
             .setThumbnailAccessory(
                 thumbnail => thumbnail
                     .setDescription("AttoviaBot looks happy")
-                    .setURL("https://i.imgur.com/dfxVMP4.png")
+                    .setURL(ABPictures.happyChristmas)
             )
     )
     .setAccentColor(0xc57bf3)

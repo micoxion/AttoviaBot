@@ -19,7 +19,7 @@ export async function welcomeMember(member: GuildMember) {
     .setThumbnailAccessory(
         thumbnail => thumbnail
         .setDescription("Cute profile pic of AttoviaBot smiling")
-        .setURL(ABPictures.happy)
+        .setURL(ABPictures.happyChristmas)
     )
     const container = new ContainerBuilder().addSectionComponents(section)
     if (welcomeChannel) {

@@ -20,7 +20,10 @@
     "ABPictures" : {
         "happy" : "https://i.imgur.com/dfxVMP4.png",
         "confused" : "https://i.imgur.com/nfxhMpf.png",
-        "sad" : "https://i.imgur.com/B1SBDZe.png"
+        "sad" : "https://i.imgur.com/B1SBDZe.png",
+        "happyChristmas" : "https://i.imgur.com/edzInn6.png",
+        "confusedChristmas" : "https://i.imgur.com/qaZLjNP.png",
+        "sadChristmas" : "https://i.imgur.com/Luv95cC.png"
     },
     "CustomEmojiIds" : {
         "meydalove" : ":MeydaLove:1373394976364433568"

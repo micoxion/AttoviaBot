@@ -1,4 +1,7 @@
 import { SlashCommandBuilder, EmbedBuilder, ChatInputCommandInteraction, ContainerBuilder, MessageFlags } from 'discord.js'
+import { createRequire } from 'node:module';
+const require = createRequire(import.meta.url);
+const { ABPictures } = require('../../../config.json')
 
 export let data = new SlashCommandBuilder()
         .setName("commands")
@@ -16,7 +19,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
                 .setThumbnailAccessory(
                     thumbnail => thumbnail
                         .setDescription("AttoviaBot looks happy")
-                        .setURL("https://i.imgur.com/dfxVMP4.png")
+                        .setURL(ABPictures.happyChristmas)
                 )
         )
         .addSeparatorComponents(seperator => 
