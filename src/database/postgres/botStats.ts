@@ -16,3 +16,19 @@ export async function addToGoodBotCount(amount: number) {
     .returning('goodbotcount')
     .executeTakeFirst()
 }
+
+export async function getLastBotCheckin() {
+    return await db
+    .selectFrom('myschema.botstats')
+    .select('lastonline')
+    .executeTakeFirst()
+}
+
+export async function updateLastOnline() {
+    return await db
+    .updateTable('myschema.botstats')
+    .set({
+        lastonline: new Date()
+    })
+    .executeTakeFirst()
+}

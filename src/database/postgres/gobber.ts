@@ -6,7 +6,10 @@ import { Gobber } from '../../Gobber/Gobber.js';
 export async function insertGobber(gobber: Insertable<MyschemaGobbers>) {
     return await db
     .insertInto('myschema.gobbers')
-    .values(gobber)
+    .values({
+        discordid: gobber.discordid,
+        savedata: gobber.savedata
+    })
     .returningAll()
     .executeTakeFirstOrThrow()
 }
@@ -22,7 +25,9 @@ export async function getGobberById(discordid: string) {
 export async function updateGobber(discordid: string, gobber: Updateable<MyschemaGobbers>) {
     return await db
     .updateTable('myschema.gobbers')
-    .set(gobber)
+    .set({
+        savedata: gobber.savedata
+    })
     .where('discordid', '=', discordid)
     .returningAll()
     .executeTakeFirstOrThrow()

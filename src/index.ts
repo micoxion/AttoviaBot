@@ -7,6 +7,7 @@ import { getRandomPrompt } from './database/postgres/prompts.js';
 import fs from 'node:fs';
 import path from 'node:path';
 import url from 'url'
+import nodeCron from 'node-cron';
 import { Client, Collection, Events, GatewayIntentBits, MessageFlags, ChannelType, EmbedBuilder, Interaction, TextChannel, SectionBuilder, ActivityType, ContainerBuilder } from 'discord.js'; 
 import { handleDailyPromptMessage } from './messageListeners/daily-prompt.js';
 import { countAttachmentWords, countRepliedMessageWords } from './textCommands/count-words.js';
@@ -19,13 +20,7 @@ const { BTForumId, SWForumId, dailyPromptChannelId, welcomeChannelId, BTTags, SW
 //import Module from 'node:module';
 import { CustomCommand } from './ABTypes/CustomCommand.js';
 
-import { updateWordCount, updateStreak } from './database/postgres/writers.js';
-import { countWords } from './utilities/word-counter.js';
-import { logToFile } from './utilities/logger.js';
-import { recordMessageTracked } from './database/postgres/messagesCounted.js';
 import { buildErrorContainer } from './commenContainers/Error.js';
-import { buildMistakeContainer } from './commenContainers/Mistake.js';
-import { buildSuccessContainer } from './commenContainers/Success.js';
 import { handleForumPost } from './eventHandlers/handleForumPosts.js';
 import { welcomeMember } from './eventHandlers/welcomeMember.js';
 import { addXpToOnePlayer as addXpToOnePlayer, xpHandler } from './xpHandler.js';
@@ -33,6 +28,8 @@ import { Player } from './Player/Player.js';
 import { getPlayerById, insertPlayer } from './database/postgres/players.js';
 import { MyschemaPlayers } from 'kysely-codegen';
 import { validateGoodBot } from './messageListeners/validateGoodPrompt.js';
+import { checkStatus } from './utilities/checkStatus.js';
+import { updateLastOnline } from './database/postgres/botStats.js';
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
 require('dotenv').config(); 
@@ -86,12 +83,17 @@ client.once('clientReady', () => {
   })
   setInterval(() => {
     ActivePlayers.clear()
+    checkStatus(client)
   }, 60000) //60000 milliseconds is 1 minute
+  setInterval(() => {
+    updateLastOnline()
+  }, 600000); //10 minutes
+  checkStatus(client);
 }); 
 
 client.on(Events.InteractionCreate, async (interaction: Interaction) => {
   if (!interaction.isChatInputCommand()) return;
-  console.log(commands.toJSON())
+  //console.log(commands.toJSON())
   const command = commands.get(interaction.commandName);
 
   if (!command) {
@@ -109,8 +111,6 @@ client.on(Events.InteractionCreate, async (interaction: Interaction) => {
       await interaction.reply({ content: 'There was an error while executing this command!', flags: MessageFlags.Ephemeral });
     }
   }
-
-  //console.log(interaction);
 });
 
 async function updateActivity(discordId: string, username: string) {
