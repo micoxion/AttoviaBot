@@ -20,13 +20,13 @@ export async function checkStatus(client: Client) {
                 await channel.send({ components: [container], flags: MessageFlags.IsComponentsV2 });
             }
         }
-        else if (timeDif > .2) {
-            let channel = client.channels.cache.get(botCommands)
-            if (channel && channel.isSendable()) {
-                let container = buildMistakeContainer(`I was down for ${timeDif} hours.`);
-                await channel.send({ components: [container], flags: MessageFlags.IsComponentsV2 });
-            }
-        }
+        // else if (timeDif > .2) {
+        //     let channel = client.channels.cache.get(botCommands)
+        //     if (channel && channel.isSendable()) {
+        //         let container = buildMistakeContainer(`I was down for ${timeDif} hours.`);
+        //         await channel.send({ components: [container], flags: MessageFlags.IsComponentsV2 });
+        //     }
+        // }
     }
     await updateLastOnline()
 }

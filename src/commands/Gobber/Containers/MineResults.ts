@@ -16,6 +16,6 @@ export function BuildMineResultsContainer(startMessage: string, minedOre: Map<Or
         textDisplay => textDisplay
             .setContent(buildOreString(minedOre))
     )
-    .setAccentColor(0x00FF00)
+    .setAccentColor(0x5e8f6b)
     return container;
 }

@@ -1,6 +1,6 @@
 import { Introspector, MyschemaGobbers } from "kysely-codegen";
-import { GobberData, OreInfo, replacer, reviver } from "./GobberData.js";
-import { insertGobber, updateGobber } from "../database/postgres/gobber.js";
+import { ClipPrice, GobberData, OreInfo, replacer, reviver } from "./GobberData.js";
+import { getGobberById, insertGobber, updateGobber } from "../database/postgres/gobber.js";
 import { CacheType, ChatInputCommandInteraction, Events, Interaction, LabelBuilder, MessageFlags, ModalBuilder, TextInputBuilder, TextInputStyle } from "discord.js";
 import { Resource, ResourceType } from "./GobberTypes/Resources.js";
 import { buildSuccessContainer } from "../commenContainers/Success.js";
@@ -112,6 +112,26 @@ export class Gobber implements MyschemaGobbers {
         this.savedata = JSON.stringify(this.gobberData, replacer)
         console.log("POST SAVE: \n" + this.savedata)
         await updateGobber(this.discordid, this);
+    }
+
+    async addOre(type: ResourceType, amount: number) {
+        let selectedOre = this.gobberData.ore.get(type);
+        if (selectedOre) {
+            selectedOre.owned += amount;
+        }
+        await this.updateGobber();
+    }
+
+    async addClips(clips: ClipPrice) {
+        this.gobberData.currency.shards += clips.shards;
+        this.gobberData.currency.clips += clips.clips;
+        this.gobberData.currency.tats += clips.tats;
+        this.gobberData.currency.pieces += clips.pieces;
+        await this.updateGobber()
+    }
+
+    async addResource(type: ResourceType, amount: number) {
+
     }
 
     async onboardGobber(interaction: ChatInputCommandInteraction) {

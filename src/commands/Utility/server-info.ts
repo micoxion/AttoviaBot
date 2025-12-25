@@ -1,5 +1,6 @@
 import { ChatInputCommandInteraction, SlashCommandBuilder, MessageFlags, ButtonStyle, APIMessageComponentEmoji, ActionRowData, EmbedBuilder, ActionRowBuilder, ButtonBuilder, Events, Interaction, ContainerBuilder, ThumbnailBuilder } from "discord.js";
 import { createRequire } from 'node:module';
+import { EventEmitterCleanup } from "../../utilities/interactionCleanup.js";
 const require = createRequire(import.meta.url);
 const { ABPictures } = require('../../../config.json')
 
@@ -126,14 +127,5 @@ export async function execute(interaction: ChatInputCommandInteraction) {
             await interaction.deleteReply();
         }
     })
-    const collector = interaction.channel?.createMessageComponentCollector({
-        filter: i => i.user.id === interaction.user.id,
-        idle: 15000
-    });
-    collector?.on('end', (collected, reason) => {
-        if (reason === 'idle') {
-            buttonEmitter.destroy()
-            response.delete()
-        }
-    })
+    await EventEmitterCleanup(buttonEmitter, interaction, 100000);
 }

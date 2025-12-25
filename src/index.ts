@@ -206,7 +206,6 @@ client.on('messageCreate', async (message: Message) => {
   if (message.channelId === dailyPromptChannelId) {
     await handleDailyPromptMessage(message)
   }
-
 });   
 
 
