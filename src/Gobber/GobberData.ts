@@ -1,5 +1,8 @@
 import { Gobber } from "./Gobber.js";
 import { Resource, ResourceType } from "./GobberTypes/Resources.js";
+import { createRequire } from 'node:module';
+const require = createRequire(import.meta.url);
+const { GobberEmojis } = require('../../config.json')
 
 export function replacer(key: any, value: any) {
     if (value instanceof Map) {
@@ -26,10 +29,11 @@ export class OreInfo extends Resource {
     rarityValue: number;
     quantity: number;
     unlockPrice: ClipPrice;
+    value: ClipPrice;
     unlocked: boolean;
     owned: number = 0;
 
-    constructor(health: number, rarityValue: number, quantity: number, unlockPrice: ClipPrice, type: ResourceType, name: string, iconURL: string = "", unlocked: boolean = false) {
+    constructor(health: number, rarityValue: number, quantity: number, unlockPrice: ClipPrice, type: ResourceType, name: string, value: ClipPrice, iconURL: string = "", unlocked: boolean = false) {
         super(name, iconURL, type);
         this.health = health;
         this.rarityValue = rarityValue;
@@ -37,6 +41,7 @@ export class OreInfo extends Resource {
         this.unlockPrice = unlockPrice;
         this.unlocked = unlocked;
         this.type = type;
+        this.value = value;
     }
 }
 
@@ -90,6 +95,23 @@ export class ClipPrice {
             return new ClipPrice(missingShards, missingClips, missingTats, missingPieces);
         }
     }
+
+    getPriceString(): string {
+        let priceString = "";
+        if (this.shards != 0) {
+            priceString += `${this.shards}${GobberEmojis.Shard} `
+        }
+        if (this.clips != 0) {
+            priceString += `${this.clips}${GobberEmojis.Clip}`
+        }
+        if (this.tats != 0) {
+            priceString += `${this.tats}${GobberEmojis.Tat}`
+        }
+        if (this.pieces != 0) {
+            priceString += `${this.pieces} Pieces`;
+        }
+        return priceString;
+    }
 }
 
 export class GobberData {
@@ -97,9 +119,15 @@ export class GobberData {
     mineRate: number = 1;
     isMining: boolean = false;
     ore: Map<ResourceType, OreInfo> = new Map<ResourceType, OreInfo>([
-        [ResourceType.copper, new OreInfo(1, 1, 1, new ClipPrice(), ResourceType.copper, "Copper Ore", "", true)],
-        [ResourceType.iron, new OreInfo(100, .8, 1, new ClipPrice(0, 50), ResourceType.iron, "Iron Ore")],
-        [ResourceType.gold, new OreInfo(10000, .2, 1, new ClipPrice(0, 200), ResourceType.gold, "Gold Ore")]
+        [ResourceType.copper, new OreInfo(1, 1, 1, new ClipPrice(), 
+            ResourceType.copper, "Copper Ore", new ClipPrice(1, 0, 0, 0), "", true)
+        ],
+        [ResourceType.iron, new OreInfo(100, .8, 1, new ClipPrice(0, 50), 
+            ResourceType.iron, "Iron Ore", new ClipPrice(0, 1, 0, 0))
+        ],
+        [ResourceType.gold, new OreInfo(10000, .2, 1, new ClipPrice(0, 200), 
+            ResourceType.gold, "Gold Ore", new ClipPrice(0, 0, 1, 0))
+        ]
     ]);
     currency = {
         shards: 0,

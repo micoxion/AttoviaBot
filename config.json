@@ -27,6 +27,15 @@
         "confusedChristmas" : "https://i.imgur.com/qaZLjNP.png",
         "sadChristmas" : "https://i.imgur.com/Luv95cC.png"
     },
+    "GobberThumbs" : {
+        "Borris" : "https://i.imgur.com/Bb6Aw7H.png"
+    },
+    "GobberAccent" : "0x5e8f6b",
+    "GobberEmojis" : {
+        "Shard" : "<:Shards:1453839276243681436>",
+        "Clip" : "<:Clip:1453839229321875650>",
+        "Tat" : "<:Tat:1453839302378389648>"
+    },
     "CustomEmojiIds" : {
         "meydalove" : ":MeydaLove:1373394976364433568"
     }
