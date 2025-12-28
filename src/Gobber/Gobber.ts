@@ -27,7 +27,7 @@ export class Gobber implements MyschemaGobbers {
 
     constructor(discordid: string, savedata: string | null, savedataDecoded: GobberData | null) {
         if (savedata != null) {
-            savedataDecoded = JSON.parse(savedata, reviver) as GobberData;
+            savedataDecoded = new GobberData(JSON.parse(savedata, reviver) as GobberData);
         }
         else {
             savedata = JSON.stringify(defaultData, replacer)
@@ -123,10 +123,7 @@ export class Gobber implements MyschemaGobbers {
     }
 
     async addClips(clips: ClipPrice) {
-        this.gobberData.currency.shards += clips.shards;
-        this.gobberData.currency.clips += clips.clips;
-        this.gobberData.currency.tats += clips.tats;
-        this.gobberData.currency.pieces += clips.pieces;
+        this.gobberData.currency = this.gobberData.currency.add(clips);
         await this.updateGobber()
     }
 

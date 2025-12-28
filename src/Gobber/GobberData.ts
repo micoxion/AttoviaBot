@@ -4,24 +4,30 @@ import { createRequire } from 'node:module';
 const require = createRequire(import.meta.url);
 const { GobberEmojis } = require('../../config.json')
 
+const rexFunction = /^\/Function\(.*\)\/$/s;
+
 export function replacer(key: any, value: any) {
     if (value instanceof Map) {
         return {
             dataType: 'Map',
             value: Array.from(value.entries())
         };
-    } else {
-        return value;
+    } else if (typeof value === "function") {
+        return "/Function(" + value.toString() + ")/";
     }
+    return value;
 }
 
 export function reviver(key: any, value: any) {
-  if(typeof value === 'object' && value !== null) {
-    if (value.dataType === 'Map') {
-      return new Map(value.value);
+    if(typeof value === 'object' && value !== null) {
+        if (value.dataType === 'Map') {
+            return new Map(value.value);
+        }
+    } else if (typeof value === "string" && rexFunction.test(value)) {
+        const functionText = value.substring(10, value.length - 2);
+        return (0, eval)("(" + functionText + ")");
     }
-  }
-  return value;
+    return value;
 }
 
 export class OreInfo extends Resource {
@@ -42,6 +48,10 @@ export class OreInfo extends Resource {
         this.unlocked = unlocked;
         this.type = type;
         this.value = value;
+    }
+
+    toString(): string {
+        return `${this.emojiId} ${this.name}`;
     }
 }
 
@@ -66,15 +76,20 @@ export class ClipPrice {
             currencyOwned.pieces >= this.pieces;
     }
 
+    multiply(x: number): ClipPrice {
+        let shards = Math.floor(this.shards * x);
+        let clips = Math.floor(this.clips * x);
+        let tats = Math.floor(this.tats * x);
+        let pieces = Math.floor(this.pieces * x);
+        return new ClipPrice(shards, clips, tats, pieces);
+    }
+
     //returns true if purchased successfully, otherwise returns a ClipPrice representing the missing currency
-    async purchase(gobber: Gobber): Promise<ClipPrice | boolean> {
+    async purchase(gobber: Gobber): Promise<ClipPrice | null> {
         if (this.isPurchasable(gobber)) {
-            gobber.gobberData.currency.shards -= this.shards;
-            gobber.gobberData.currency.clips -= this.clips;
-            gobber.gobberData.currency.tats -= this.tats;
-            gobber.gobberData.currency.pieces -= this.pieces;
+            gobber.gobberData.currency = gobber.gobberData.currency.subtract(this);
             await gobber.updateGobber()
-            return true;
+            return null;
         } else {
             let missingShards = this.shards - gobber.gobberData.currency.shards
             if (missingShards < 0) {
@@ -96,7 +111,7 @@ export class ClipPrice {
         }
     }
 
-    getPriceString(): string {
+    toString(): string {
         let priceString = "";
         if (this.shards != 0) {
             priceString += `${this.shards}${GobberEmojis.Shard} `
@@ -112,13 +127,22 @@ export class ClipPrice {
         }
         return priceString;
     }
+
+    add(other: ClipPrice): ClipPrice {
+        return new ClipPrice(this.shards + other.shards, this.clips + other.clips, this.tats + other.tats, this.pieces + other.pieces);
+    }
+
+    subtract(other: ClipPrice): ClipPrice {
+        return new ClipPrice(this.shards - other.shards, this.clips - other.clips, this.tats - other.tats, this.pieces - other.pieces);
+    }
 }
 
 export class GobberData {
     gobberName: string = "Gobber";
     mineRate: number = 1;
     isMining: boolean = false;
-    ore: Map<ResourceType, OreInfo> = new Map<ResourceType, OreInfo>([
+    ore: Map<ResourceType, OreInfo> = new Map<ResourceType, OreInfo>();
+    static baseOre: Map<ResourceType, OreInfo> = new Map<ResourceType, OreInfo>([
         [ResourceType.copper, new OreInfo(1, 1, 1, new ClipPrice(), 
             ResourceType.copper, "Copper Ore", new ClipPrice(1, 0, 0, 0), "", true)
         ],
@@ -129,12 +153,22 @@ export class GobberData {
             ResourceType.gold, "Gold Ore", new ClipPrice(0, 0, 1, 0))
         ]
     ]);
-    currency = {
-        shards: 0,
-        clips: 0,
-        tats: 0,
-        pieces: 0
-    };
+    currency: ClipPrice = new ClipPrice(0, 0, 0, 0);
     mineStartTime: number | null = null;
-    maxAwayMineTime: number = 600000 //ten minutes in milliseconds
+    maxAwayMineTime: number = 600000; //ten minutes in milliseconds
+    constructor(decodedGobberData: GobberData | null = null) {
+        if (!decodedGobberData) {
+            this.ore = GobberData.baseOre
+            return;
+        }
+        this.gobberName = decodedGobberData.gobberName;
+        this.mineRate = decodedGobberData.mineRate;
+        this.isMining = decodedGobberData.isMining;
+        for (const [resourceType, oreInfo] of decodedGobberData.ore) {
+            this.ore.set(resourceType, new OreInfo(oreInfo.health, oreInfo.rarityValue, oreInfo.quantity, oreInfo.unlockPrice, oreInfo.type, oreInfo.name, oreInfo.value, oreInfo.emojiId, oreInfo.unlocked))
+        }
+        this.currency = decodedGobberData.currency;
+        this.mineStartTime = decodedGobberData.mineStartTime;
+        this.maxAwayMineTime = decodedGobberData.maxAwayMineTime;
+    }
 }

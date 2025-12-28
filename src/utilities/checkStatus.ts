@@ -16,7 +16,7 @@ export async function checkStatus(client: Client) {
             //send message here
             let channel = client.channels.cache.get(botCommands)
             if (channel && channel.isSendable()) {
-                let container = buildMistakeContainer(`<@&1232395644702949396> I was down for ${timeDif.toFixed(2)} hours. If you had words I didn't count in that time make sure you use my manual wordcount commands to maintain streaks! \`/commands\` to see those!`);
+                let container = buildMistakeContainer(`<@&1454611720822591518> I was down for ${timeDif.toFixed(2)} hours. If you had words I didn't count in that time make sure you use my manual wordcount commands to maintain streaks! \`/commands\` to see those!`);
                 await channel.send({ components: [container], flags: MessageFlags.IsComponentsV2 });
             }
         }
