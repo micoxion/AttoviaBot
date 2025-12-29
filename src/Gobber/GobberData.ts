@@ -55,6 +55,75 @@ export class OreInfo extends Resource {
     }
 }
 
+export class ClipOperator {
+    static isPurchasable(gobber: Gobber, clipPrice: ClipPrice): boolean {
+        let currencyOwned = gobber.gobberData.currency
+        return currencyOwned.shards >= clipPrice.shards &&
+            currencyOwned.clips >= clipPrice.clips &&
+            currencyOwned.tats >= clipPrice.tats &&
+            currencyOwned.pieces >= clipPrice.pieces;
+    }
+
+    static multiply(x: number, clipPrice: ClipPrice): ClipPrice {
+        let shards = Math.floor(clipPrice.shards * x);
+        let clips = Math.floor(clipPrice.clips * x);
+        let tats = Math.floor(clipPrice.tats * x);
+        let pieces = Math.floor(clipPrice.pieces * x);
+        return new ClipPrice(shards, clips, tats, pieces);
+    }
+
+    static async purchase(gobber: Gobber, clipPrice: ClipPrice): Promise<ClipPrice | null> {
+        if (this.isPurchasable(gobber, clipPrice)) {
+            gobber.gobberData.currency = ClipOperator.subtract(gobber.gobberData.currency, clipPrice);
+            await gobber.updateGobber()
+            return null;
+        } else {
+            let missingShards = clipPrice.shards - gobber.gobberData.currency.shards
+            if (missingShards < 0) {
+                missingShards = 0
+            }
+            let missingClips = clipPrice.clips - gobber.gobberData.currency.clips
+            if (missingClips < 0) {
+                missingClips = 0
+            }
+            let missingTats = clipPrice.tats - gobber.gobberData.currency.tats;
+            if (missingTats < 0) {
+                missingTats = 0
+            }
+            let missingPieces = clipPrice.pieces - gobber.gobberData.currency.pieces;
+            if (missingPieces < 0) {
+                missingPieces = 0;
+            }
+            return new ClipPrice(missingShards, missingClips, missingTats, missingPieces);
+        }
+    }
+
+    static toString(clipPrice: ClipPrice): string {
+        let priceString = "";
+        if (clipPrice.shards != 0) {
+            priceString += `${clipPrice.shards}${GobberEmojis.Shard} `
+        }
+        if (clipPrice.clips != 0) {
+            priceString += `${clipPrice.clips}${GobberEmojis.Clip}`
+        }
+        if (clipPrice.tats != 0) {
+            priceString += `${clipPrice.tats}${GobberEmojis.Tat}`
+        }
+        if (clipPrice.pieces != 0) {
+            priceString += `${clipPrice.pieces} Pieces`;
+        }
+        return priceString;
+    }
+
+    static add(clipPrice: ClipPrice, other: ClipPrice): ClipPrice {
+        return new ClipPrice(clipPrice.shards + other.shards, clipPrice.clips + other.clips, clipPrice.tats + other.tats, clipPrice.pieces + other.pieces);
+    }
+
+    static subtract(clipPrice: ClipPrice, other: ClipPrice): ClipPrice {
+        return new ClipPrice(clipPrice.shards - other.shards, clipPrice.clips - other.clips, clipPrice.tats - other.tats, clipPrice.pieces - other.pieces);
+    }
+}
+
 export class ClipPrice {
     shards: number
     clips: number
@@ -68,73 +137,73 @@ export class ClipPrice {
         this.pieces = pieces
     }
 
-    isPurchasable(gobber: Gobber): boolean {
-        let currencyOwned = gobber.gobberData.currency
-        return currencyOwned.shards >= this.shards &&
-            currencyOwned.clips >= this.clips &&
-            currencyOwned.tats >= this.tats &&
-            currencyOwned.pieces >= this.pieces;
-    }
+    // isPurchasable(gobber: Gobber): boolean {
+    //     let currencyOwned = gobber.gobberData.currency
+    //     return currencyOwned.shards >= this.shards &&
+    //         currencyOwned.clips >= this.clips &&
+    //         currencyOwned.tats >= this.tats &&
+    //         currencyOwned.pieces >= this.pieces;
+    // }
 
-    multiply(x: number): ClipPrice {
-        let shards = Math.floor(this.shards * x);
-        let clips = Math.floor(this.clips * x);
-        let tats = Math.floor(this.tats * x);
-        let pieces = Math.floor(this.pieces * x);
-        return new ClipPrice(shards, clips, tats, pieces);
-    }
+    // multiply(x: number): ClipPrice {
+    //     let shards = Math.floor(this.shards * x);
+    //     let clips = Math.floor(this.clips * x);
+    //     let tats = Math.floor(this.tats * x);
+    //     let pieces = Math.floor(this.pieces * x);
+    //     return new ClipPrice(shards, clips, tats, pieces);
+    // }
 
-    //returns true if purchased successfully, otherwise returns a ClipPrice representing the missing currency
-    async purchase(gobber: Gobber): Promise<ClipPrice | null> {
-        if (this.isPurchasable(gobber)) {
-            gobber.gobberData.currency = gobber.gobberData.currency.subtract(this);
-            await gobber.updateGobber()
-            return null;
-        } else {
-            let missingShards = this.shards - gobber.gobberData.currency.shards
-            if (missingShards < 0) {
-                missingShards = 0
-            }
-            let missingClips = this.clips - gobber.gobberData.currency.clips
-            if (missingClips < 0) {
-                missingClips = 0
-            }
-            let missingTats = this.tats - gobber.gobberData.currency.tats;
-            if (missingTats < 0) {
-                missingTats = 0
-            }
-            let missingPieces = this.pieces - gobber.gobberData.currency.pieces;
-            if (missingPieces < 0) {
-                missingPieces = 0;
-            }
-            return new ClipPrice(missingShards, missingClips, missingTats, missingPieces);
-        }
-    }
+    // //returns true if purchased successfully, otherwise returns a ClipPrice representing the missing currency
+    // async purchase(gobber: Gobber): Promise<ClipPrice | null> {
+    //     if (this.isPurchasable(gobber)) {
+    //         gobber.gobberData.currency = gobber.gobberData.currency.subtract(this);
+    //         await gobber.updateGobber()
+    //         return null;
+    //     } else {
+    //         let missingShards = this.shards - gobber.gobberData.currency.shards
+    //         if (missingShards < 0) {
+    //             missingShards = 0
+    //         }
+    //         let missingClips = this.clips - gobber.gobberData.currency.clips
+    //         if (missingClips < 0) {
+    //             missingClips = 0
+    //         }
+    //         let missingTats = this.tats - gobber.gobberData.currency.tats;
+    //         if (missingTats < 0) {
+    //             missingTats = 0
+    //         }
+    //         let missingPieces = this.pieces - gobber.gobberData.currency.pieces;
+    //         if (missingPieces < 0) {
+    //             missingPieces = 0;
+    //         }
+    //         return new ClipPrice(missingShards, missingClips, missingTats, missingPieces);
+    //     }
+    // }
 
-    toString(): string {
-        let priceString = "";
-        if (this.shards != 0) {
-            priceString += `${this.shards}${GobberEmojis.Shard} `
-        }
-        if (this.clips != 0) {
-            priceString += `${this.clips}${GobberEmojis.Clip}`
-        }
-        if (this.tats != 0) {
-            priceString += `${this.tats}${GobberEmojis.Tat}`
-        }
-        if (this.pieces != 0) {
-            priceString += `${this.pieces} Pieces`;
-        }
-        return priceString;
-    }
+    // toString(): string {
+    //     let priceString = "";
+    //     if (this.shards != 0) {
+    //         priceString += `${this.shards}${GobberEmojis.Shard} `
+    //     }
+    //     if (this.clips != 0) {
+    //         priceString += `${this.clips}${GobberEmojis.Clip}`
+    //     }
+    //     if (this.tats != 0) {
+    //         priceString += `${this.tats}${GobberEmojis.Tat}`
+    //     }
+    //     if (this.pieces != 0) {
+    //         priceString += `${this.pieces} Pieces`;
+    //     }
+    //     return priceString;
+    // }
 
-    add(other: ClipPrice): ClipPrice {
-        return new ClipPrice(this.shards + other.shards, this.clips + other.clips, this.tats + other.tats, this.pieces + other.pieces);
-    }
+    // add(other: ClipPrice): ClipPrice {
+    //     return new ClipPrice(this.shards + other.shards, this.clips + other.clips, this.tats + other.tats, this.pieces + other.pieces);
+    // }
 
-    subtract(other: ClipPrice): ClipPrice {
-        return new ClipPrice(this.shards - other.shards, this.clips - other.clips, this.tats - other.tats, this.pieces - other.pieces);
-    }
+    // subtract(other: ClipPrice): ClipPrice {
+    //     return new ClipPrice(this.shards - other.shards, this.clips - other.clips, this.tats - other.tats, this.pieces - other.pieces);
+    // }
 }
 
 export class GobberData {

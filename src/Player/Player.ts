@@ -67,9 +67,9 @@ export class Player implements MyschemaPlayers {
             this.level += 1;
             let message
             if (this.level == 1) {
-                message = `All hail <@${this.discordid}>, for they have taken their first step towards the realm of the [Abbaki](https://attovia.wiki/Races/Cosmic/Abbaki)!`
+                message = `All hail <@${this.discordid}>, for they have taken their first step towards the realm of the [Abbaki](https://attovia.wiki/L'vad/Attovia/Races/Cosmic/Abbaki)!`
             } else {
-                message = `All hail <@${this.discordid}>, for they are ${this.level} steps towards the realm of the [Abbaki](https://attovia.wiki/Races/Cosmic/Abbaki)!`
+                message = `All hail <@${this.discordid}>, for they are ${this.level} steps towards the realm of the [Abbaki](https://attovia.wiki/L'vad/Attovia/Races/Cosmic/Abbaki)!`
             }
             const container = buildSuccessContainer(message)
             await channel.send({components: [container], flags: MessageFlags.IsComponentsV2})

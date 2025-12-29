@@ -1,5 +1,5 @@
 import { Introspector, MyschemaGobbers } from "kysely-codegen";
-import { ClipPrice, GobberData, OreInfo, replacer, reviver } from "./GobberData.js";
+import { ClipOperator, ClipPrice, GobberData, OreInfo, replacer, reviver } from "./GobberData.js";
 import { getGobberById, insertGobber, updateGobber } from "../database/postgres/gobber.js";
 import { CacheType, ChatInputCommandInteraction, Events, Interaction, LabelBuilder, MessageFlags, ModalBuilder, TextInputBuilder, TextInputStyle } from "discord.js";
 import { Resource, ResourceType } from "./GobberTypes/Resources.js";
@@ -123,7 +123,7 @@ export class Gobber implements MyschemaGobbers {
     }
 
     async addClips(clips: ClipPrice) {
-        this.gobberData.currency = this.gobberData.currency.add(clips);
+        this.gobberData.currency = ClipOperator.add(this.gobberData.currency, clips);
         await this.updateGobber()
     }
 
