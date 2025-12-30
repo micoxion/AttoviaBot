@@ -7,6 +7,7 @@ import { handleDailyPromptMessage } from "../messageListeners/daily-prompt.js";
 import { createRequire } from 'node:module';
 import { getGobberById } from "../database/postgres/gobber.js";
 import { Gobber } from "../Gobber/Gobber.js";
+import { sell } from "./gobber.js";
 const require = createRequire(import.meta.url);
 const { BTForumId, SWForumId, dailyPromptChannelId, welcomeChannelId, BTTags, SWTags, siroxionId } = require('../config.json')// with { type: 'json' }
 
@@ -60,7 +61,8 @@ export async function textCommandsHandler(client: Client, message: Message) {
   }
 /**** GOBBER ****/
   if (message.content.startsWith("!ab sell")) {
-    let gobber = retrieveGobber(client, message.author.id)
+    let gobber = await retrieveGobber(client, message.author.id)
+    await sell(client, message, gobber);
   }
 
   if (message.content.startsWith("!ab buy")) {
