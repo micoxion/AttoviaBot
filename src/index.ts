@@ -14,9 +14,6 @@ import { countAttachmentWords, countRepliedMessageWords } from './textCommands/c
 //import { initialize } from './textCommands/initialize.js';
 //import { initializePrompts } from './textCommands/initializePrompts.js';
 import { Message, ThreadChannel } from 'discord.js';
-import { createRequire } from 'node:module';
-const require = createRequire(import.meta.url);
-const { BTForumId, SWForumId, dailyPromptChannelId, welcomeChannelId, BTTags, SWTags, siroxionId } = require('../config.json')// with { type: 'json' }
 //import Module from 'node:module';
 import { CustomCommand } from './ABTypes/CustomCommand.js';
 
@@ -30,6 +27,7 @@ import { MyschemaPlayers } from 'kysely-codegen';
 import { validateGoodBot } from './messageListeners/validateGoodPrompt.js';
 import { checkStatus } from './utilities/checkStatus.js';
 import { updateLastOnline } from './database/postgres/botStats.js';
+import { textCommandsHandler } from './textCommands/textCommandsHandler.js';
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
 require('dotenv').config(); 
@@ -153,59 +151,60 @@ client.on('messageCreate', async (message: Message) => {
   if ((!client.user || message.author.id != client.user.id) && message.author.bot != true) {
     await updateActivity(message.author.id, message.author.username)
   }
-  // Ignore messages from bots 
-  if (message.author.bot) return; 
+  await textCommandsHandler(client, message);
+  // // Ignore messages from bots 
+  // if (message.author.bot) return; 
 
-  // Respond to a specific message 
-  if (message.content.toLowerCase() === 'hello attoviabot') { 
-    await message.reply('Hi there! 👋 I am your friendly bot.');
-    return;
-  } 
+  // // Respond to a specific message 
+  // if (message.content.toLowerCase() === 'hello attoviabot') { 
+  //   await message.reply('Hi there! 👋 I am your friendly bot.');
+  //   return;
+  // } 
 
-  if (message.content.startsWith("!ab attachments")) {
-    await countAttachmentWords(message)
-  }
-
-  if (message.content.startsWith("!ab count")) {
-    await countRepliedMessageWords(message)
-  }
-
-  if (message.content.toLocaleLowerCase().match(/good bot|good attoviabot|good attovia bot/g)) {    
-    await validateGoodBot(message, client)
-  }
-
-  // if (message.content.startsWith("!ab init") && message.author.id == siroxionId) {
-  //   await initialize(client)
+  // if (message.content.startsWith("!ab attachments")) {
+  //   await countAttachmentWords(message)
   // }
 
-  // if (message.content.startsWith("!ab prompts init") && message.author.id == siroxionId) {
-  //   await initializePrompts(client)
+  // if (message.content.startsWith("!ab count")) {
+  //   await countRepliedMessageWords(message)
   // }
 
-  if (message.content.startsWith("!ab test") && message.author.username == "siroxion") {
-    let component = buildErrorContainer("Uh oh! Something went wrong!", "Test info.")
-    message.reply({
-      components: [component],
-      flags: MessageFlags.IsComponentsV2
-    })
-  } 
+  // if (message.content.toLocaleLowerCase().match(/good bot|good attoviabot|good attovia bot/g)) {    
+  //   await validateGoodBot(message, client)
+  // }
 
-  if (message.content.startsWith("!ab random prompt")) {
-    let prompt = await getRandomPrompt()
-    let embed = new EmbedBuilder()
-            .setColor(0xc57bf3)
-            .setTitle("Build Together Day " + prompt.day.toString())
-            .setAuthor({ name: 'AttoviaBot', iconURL: client.user?.displayAvatarURL() })
-            .setDescription("> " + prompt.prompt + "\n" + prompt.source + "\n### Date\n" + "<t:" + Math.floor(prompt.date.getTime() / 1000).toString() + ":D>")
-            .setFields(
-                { name: "Original Message", value: prompt.originalMessage }
-            )
-    await message.reply({embeds: [embed]})
-  }
+  // // if (message.content.startsWith("!ab init") && message.author.id == siroxionId) {
+  // //   await initialize(client)
+  // // }
 
-  if (message.channelId === dailyPromptChannelId) {
-    await handleDailyPromptMessage(message)
-  }
+  // // if (message.content.startsWith("!ab prompts init") && message.author.id == siroxionId) {
+  // //   await initializePrompts(client)
+  // // }
+
+  // if (message.content.startsWith("!ab test") && message.author.username == "siroxion") {
+  //   let component = buildErrorContainer("Uh oh! Something went wrong!", "Test info.")
+  //   message.reply({
+  //     components: [component],
+  //     flags: MessageFlags.IsComponentsV2
+  //   })
+  // } 
+
+  // if (message.content.startsWith("!ab random prompt")) {
+  //   let prompt = await getRandomPrompt()
+  //   let embed = new EmbedBuilder()
+  //           .setColor(0xc57bf3)
+  //           .setTitle("Build Together Day " + prompt.day.toString())
+  //           .setAuthor({ name: 'AttoviaBot', iconURL: client.user?.displayAvatarURL() })
+  //           .setDescription("> " + prompt.prompt + "\n" + prompt.source + "\n### Date\n" + "<t:" + Math.floor(prompt.date.getTime() / 1000).toString() + ":D>")
+  //           .setFields(
+  //               { name: "Original Message", value: prompt.originalMessage }
+  //           )
+  //   await message.reply({embeds: [embed]})
+  // }
+
+  // if (message.channelId === dailyPromptChannelId) {
+  //   await handleDailyPromptMessage(message)
+  // }
 });   
 
 
