@@ -1,13 +1,9 @@
 // Import required modules 
-import { createWorker } from 'tesseract.js';
 import { dirname } from 'path';
 import { fileURLToPath } from 'node:url';
-import { config } from 'dotenv';
-import { getRandomPrompt } from './database/postgres/prompts.js';
 import fs from 'node:fs';
 import path from 'node:path';
 import url from 'url'
-import nodeCron from 'node-cron';
 import { Client, Collection, Events, GatewayIntentBits, MessageFlags, ChannelType, EmbedBuilder, Interaction, TextChannel, SectionBuilder, ActivityType, ContainerBuilder } from 'discord.js'; 
 import { handleDailyPromptMessage } from './messageListeners/daily-prompt.js';
 import { countAttachmentWords, countRepliedMessageWords } from './textCommands/count-words.js';
@@ -28,6 +24,8 @@ import { validateGoodBot } from './messageListeners/validateGoodPrompt.js';
 import { checkStatus } from './utilities/checkStatus.js';
 import { updateLastOnline } from './database/postgres/botStats.js';
 import { textCommandsHandler } from './textCommands/textCommandsHandler.js';
+import { createRequire } from 'node:module'
+const require = createRequire(import.meta.url);
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
 require('dotenv').config(); 

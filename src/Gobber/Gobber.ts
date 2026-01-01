@@ -4,6 +4,10 @@ import { getGobberById, insertGobber, updateGobber } from "../database/postgres/
 import { CacheType, ChatInputCommandInteraction, ContainerBuilder, Events, Interaction, LabelBuilder, MessageFlags, ModalBuilder, TextInputBuilder, TextInputStyle } from "discord.js";
 import { Resource, ResourceType } from "./GobberTypes/Resources.js";
 import { buildSuccessContainer } from "../commenContainers/Success.js";
+import { createRequire } from 'node:module';
+const require = createRequire(import.meta.url);
+const { ABPictures } = require('../../config.json')
+
 
 const defaultData: GobberData = new GobberData()
 
@@ -47,7 +51,7 @@ export class Gobber implements MyschemaGobbers {
         this.gobberData.isMining = true;
         this.gobberData.mineStartTime = Date.now();
         await this.updateGobber();
-        return null
+        return null;
     }
 
     getUnlockedOre() {
@@ -74,8 +78,25 @@ export class Gobber implements MyschemaGobbers {
     }
 
     getGobberContainer(): ContainerBuilder {
-        return new ContainerBuilder()
-            .addSectionComponents()
+        let oreAmounts: string = ""
+        for (const [type, ore] of this.gobberData.ore) {
+            if (ore.unlocked) {
+                oreAmounts += `${ore.name}: ${ore.owned}\n`
+            }
+        }
+        return new ContainerBuilder().addSectionComponents(
+            section => section
+                .addTextDisplayComponents(
+                    textDisplay => textDisplay.setContent(
+                        `${this.gobberData.gobberName}\n${ClipOperator.toString(this.gobberData.currency)}\n${oreAmounts}`
+                    )
+                )
+                .setThumbnailAccessory(
+                    thumbnail => thumbnail
+                        .setDescription("AttoviaBot looks happy!")
+                        .setURL(ABPictures.happy)
+                )
+        )
     }
 
     async collectMining(): Promise<Map<OreInfo, number>> {
@@ -101,6 +122,13 @@ export class Gobber implements MyschemaGobbers {
                 oreSeekValue = Math.random()
                 selectedOre = this.selectOre(oreSeekValue, unlockedOres);
                 selectedOreHealth = selectedOre.health
+            }
+        }
+        for (const [oreInfo, amount] of collected) {
+            let OreInfo = this.gobberData.ore.get(oreInfo.type)
+            if (OreInfo) {
+                OreInfo.owned += amount;
+                this.gobberData.ore.set(oreInfo.type, OreInfo);
             }
         }
         await this.updateGobber();
