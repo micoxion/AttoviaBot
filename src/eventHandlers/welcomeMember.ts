@@ -19,10 +19,10 @@ export async function welcomeMember(member: GuildMember) {
     .setThumbnailAccessory(
         thumbnail => thumbnail
         .setDescription("Cute profile pic of AttoviaBot smiling")
-        .setURL(ABPictures.happyChristmas)
+        .setURL(ABPictures.happy)
     )
     const container = new ContainerBuilder().addSectionComponents(section)
     if (welcomeChannel) {
-    await welcomeChannel.send({components: [container], flags: MessageFlags.IsComponentsV2})
+    await welcomeChannel.send({components: [container], flags: MessageFlags.IsComponentsV2, allowedMentions: {users: [member.id]}})
     }
 }

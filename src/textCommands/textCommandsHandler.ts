@@ -8,8 +8,9 @@ import { createRequire } from 'node:module';
 import { getGobberById } from "../database/postgres/gobber.js";
 import { Gobber } from "../Gobber/Gobber.js";
 import { sell } from "./gobber.js";
+import { buildGobberResponse } from "../commenContainers/GobberResponse.js";
 const require = createRequire(import.meta.url);
-const { BTForumId, SWForumId, dailyPromptChannelId, welcomeChannelId, BTTags, SWTags, siroxionId } = require('../config.json')// with { type: 'json' }
+const { BTForumId, SWForumId, dailyPromptChannelId, welcomeChannelId, BTTags, SWTags, siroxionId } = require('../../config.json')// with { type: 'json' }
 
 async function retrieveGobber(client: Client, discordId: string): Promise<Gobber | null> {
   let gobberEntry = await getGobberById(discordId);
@@ -70,7 +71,8 @@ export async function textCommandsHandler(client: Client, message: Message) {
   }
 
   if (message.content.startsWith("!ab gobber")) {
-
+    let gobber = await retrieveGobber(client, message.author.id);
+    
   }
   
 /**** PROMPTS ****/

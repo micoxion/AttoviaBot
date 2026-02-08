@@ -13,7 +13,7 @@ export function buildMistakeContainer(str: string) {
             .setThumbnailAccessory(
                 thumbnail => thumbnail
                     .setDescription("AttoviaBot looks confused")
-                    .setURL(ABPictures.confusedChristmas)
+                    .setURL(ABPictures.confused)
             )
     )
     .setAccentColor(Colors.Yellow)

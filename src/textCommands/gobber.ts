@@ -5,6 +5,23 @@ import { ClipOperator, OreInfo } from "../Gobber/GobberData.js";
 
 const youShouldOnboardmessage = "You don't have a gobber yet! Please use /mine to get onboarded and start mining!";
 
+export async function gobber(client: Client, message: Message, gobber: Gobber | null) {
+    if (!gobber) {
+        let container = buildGobberResponse(youShouldOnboardmessage);
+        await message.reply({
+            components: [container], 
+            flags: MessageFlags.IsComponentsV2
+        });
+        return;
+    }
+    let container = gobber.getGobberContainer()
+    await message.reply({
+        components: [container], 
+        flags: MessageFlags.IsComponentsV2
+    });
+    return;
+}
+
 //Example: !ab sell copper 21
 export async function sell(client: Client, message: Message, gobber: Gobber | null) {
     if (!gobber) {

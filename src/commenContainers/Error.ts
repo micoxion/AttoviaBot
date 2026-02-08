@@ -12,7 +12,7 @@ export function buildErrorContainer(str: string, info: string | undefined = unde
             .setThumbnailAccessory(
                 thumbnail => thumbnail
                     .setDescription("AttoviaBot looks sad")
-                    .setURL(ABPictures.sadChristmas)
+                    .setURL(ABPictures.sad)
             )
     )
     .setAccentColor(Colors.Red)

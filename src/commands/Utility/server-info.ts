@@ -46,7 +46,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
             .setThumbnailAccessory(
                 thumbnail => thumbnail
                     .setDescription("AttoviaBot looks happy")
-                    .setURL(ABPictures.happyChristmas)
+                    .setURL(ABPictures.happy)
             )
     )
     .setAccentColor(0xc57bf3)
@@ -99,7 +99,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
             .setThumbnailAccessory(
                 thumbnail => thumbnail
                     .setDescription("AttoviaBot looks happy")
-                    .setURL(ABPictures.happyChristmas)
+                    .setURL(ABPictures.happy)
             )
     )
     .setAccentColor(0xc57bf3)

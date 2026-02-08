@@ -1,4 +1,5 @@
 // Import required modules 
+import { createRequire } from 'node:module';
 import { createWorker } from 'tesseract.js';
 import { dirname } from 'path';
 import { fileURLToPath } from 'node:url';
@@ -30,6 +31,7 @@ import { updateLastOnline } from './database/postgres/botStats.js';
 import { textCommandsHandler } from './textCommands/textCommandsHandler.js';
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
+const require = createRequire(import.meta.url);
 require('dotenv').config(); 
 const Players: Map<string, Player> = new Map()
 const ActivePlayers: Map<Player, number> = new Map()

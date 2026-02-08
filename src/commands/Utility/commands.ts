@@ -19,7 +19,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
                 .setThumbnailAccessory(
                     thumbnail => thumbnail
                         .setDescription("AttoviaBot looks happy")
-                        .setURL(ABPictures.happyChristmas)
+                        .setURL(ABPictures.happy)
                 )
         )
         .addSeparatorComponents(seperator => 
