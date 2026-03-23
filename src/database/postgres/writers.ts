@@ -23,7 +23,6 @@ export async function getWriterByUserId(userId: string, username: string): Promi
     const client = await pool.connect()
     try {
         const res = await client.query(sql)
-        console.log(res)
         if (res.rowCount == 0) {
             const writer = await addWriter({
                 userid: userId, username: username,
@@ -65,7 +64,6 @@ async function updateColumns(userId: string, columnNames: string[], columns: any
     columns.push(userId)
 
     let sql = "UPDATE Writers SET " + columnString + "\nWHERE userid = $" + userIdIndex.toString() + "\nRETURNING *"
-    console.log(sql)
     const client = await pool.connect()
     try {
         const res = await client.query(sql, columns)
@@ -109,13 +107,12 @@ export async function updateStreak(userId: string, username: string, message: Me
     }
     lastTimeWrote = new Date(lastTimeWrote)
     let daysDiff = Math.floor((today.getTime() - lastTimeWrote.getTime()) / (36e5 * 24))
-    console.log(lastTimeWrote, " : ", daysDiff)
     let isStreakDead = daysDiff > 1
     //let isStreakActive = daysDiff == 0
     let shouldStreakContinue = today.getDay() != lastTimeWrote.getDay() && daysDiff < 2
     if (lastTimeWrote < messageDate) {
         writer.lasttimewrote = new Date(messageTimestamp)
-        console.log("Last time wrote after timestamp conversion: " + writer.lasttimewrote + "is streak dead: " + isStreakDead + " | days diff: ", daysDiff)
+        //console.log("Last time wrote after timestamp conversion: " + writer.lasttimewrote + "is streak dead: " + isStreakDead + " | days diff: ", daysDiff)
     }
     if (shouldStreakContinue) {        
         writer.streak += 1        
@@ -137,10 +134,8 @@ export async function updateStreak(userId: string, username: string, message: Me
 }
 
 export async function updateWordCount(userId: string, words: number, username: string) {
-    console.log("From updateWordCount: ", userId)
     const writer: Writer = await getWriterByUserId(userId, username)
     let newWordCount = parseInt(writer.wordcount.toString()) + words;
-    console.log(newWordCount, writer.wordcount, " + ", words)
     await updateColumns(userId, ["wordcount"], [newWordCount])
     //const result = await WriterModel.updateOne({userId: userId}, {$inc: {wordCount: words}})
     //const updatedWordCount = await WriterModel.findOne({userId: userId})

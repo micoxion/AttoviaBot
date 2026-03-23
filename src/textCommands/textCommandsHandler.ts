@@ -1,5 +1,6 @@
 import { Client, EmbedBuilder, Message, MessageFlags } from "discord.js";
 import { countAttachmentWords, countRepliedMessageWords } from './count-words.js';
+import { gobberCommand } from './gobber.js'
 import { validateGoodBot } from '../messageListeners/validateGoodPrompt.js';
 import { buildErrorContainer } from "../commenContainers/Error.js";
 import { getRandomPrompt } from "../database/postgres/prompts.js";
@@ -11,6 +12,8 @@ import { sell } from "./gobber.js";
 import { buildGobberResponse } from "../commenContainers/GobberResponse.js";
 const require = createRequire(import.meta.url);
 const { BTForumId, SWForumId, dailyPromptChannelId, welcomeChannelId, BTTags, SWTags, siroxionId } = require('../../config.json')// with { type: 'json' }
+
+
 
 async function retrieveGobber(client: Client, discordId: string): Promise<Gobber | null> {
   let gobberEntry = await getGobberById(discordId);
@@ -72,7 +75,7 @@ export async function textCommandsHandler(client: Client, message: Message) {
 
   if (message.content.startsWith("!ab gobber")) {
     let gobber = await retrieveGobber(client, message.author.id);
-    
+    await gobberCommand(client, message, gobber);    
   }
   
 /**** PROMPTS ****/

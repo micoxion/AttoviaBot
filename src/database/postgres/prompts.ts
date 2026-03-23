@@ -1,6 +1,7 @@
 import pool from '../database.js'
 import dotenv from 'dotenv'
 import { Prompt } from '../../ABTypes/Prompt.js'
+import { db } from '../db.js'
 
 dotenv.config()
 
@@ -39,7 +40,7 @@ export async function getRandomPrompt() {
     }
 }
 
-export async function getAllPrompts() {
+/*export async function getAllPrompts() {
     let sql = "SELECT * FROM Prompts"
     const client = await pool.connect();
     try {
@@ -48,4 +49,12 @@ export async function getAllPrompts() {
     } finally {
         client.release();
     }
+}*/
+
+export async function getAllPrompts() {
+    return await db
+    .selectFrom('myschema.prompts')
+    .selectAll()
+    .orderBy("day asc")
+    .execute()
 }

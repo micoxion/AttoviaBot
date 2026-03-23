@@ -15,7 +15,9 @@ export async function execute(interaction: ChatInputCommandInteraction) {
                     textComponent =>
                         textComponent.setContent("### Usable Commands\n" +
                             "**The Mine**\n" +
-                            "- `/mine`: Starts and stops mining, you can only mine for 10 minutes at first, but this can be increased with infusions later.\n")
+                            "- `/mine`: Starts and stops mining, you can only mine for 10 minutes at first, but this can be increased with infusions later.\n" +
+                            "- `/market`: Sell (or buy at a markup) ore here for Clips.\n" + 
+                            "- `!ab gobber`: See some info about your gobber like ore and currency.")
                 )
                 .setThumbnailAccessory(
                     thumbnail => thumbnail
@@ -29,8 +31,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
         .addTextDisplayComponents(textComponent =>
             textComponent.setContent("### Planned Commands\n" +
                 "**The Mine**\n" +
-                "- `/gobber-help`: Gives a rundown of how the Gobber Incremental works.\n" +
-                "- `/market`: Sell (or buy at a markup) ore here for Clips.\n" +
+                "- `/gobber-help`: Gives a rundown of how the Gobber Incremental works.\n" +                
                 "- `/infuse`: Open the infusion menu to upgrade your tools and gain bonuses that will improve mining.\n" +
                 "- `/mine-upgrades`: Open the upgrades menu to upgrade the mine, increase depth (unlock new ores) and spread (allow multi-ore spawn per mining tick).\n" +
                 "- `/prestige`: Opens the prestige menu, make sure to sell your ore before you prestige!\n" +

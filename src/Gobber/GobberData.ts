@@ -30,6 +30,48 @@ export function reviver(key: any, value: any) {
     return value;
 }
 
+export function encodeGobberData(gobberData: GobberData): string {
+    let simpleObject: any = {}
+
+    simpleObject.gobberName = gobberData.gobberName;
+    simpleObject.mineRate = gobberData.mineRate;
+    simpleObject.isMining = gobberData.isMining;
+
+    simpleObject.ore = {};
+    simpleObject.ore.resourceType = [];
+    simpleObject.ore.oreInfo = [];
+
+    for (const [resourceType, ore] of gobberData.ore) {
+        simpleObject.ore.resourceType.push(resourceType);
+        simpleObject.ore.oreInfo.push(ore);
+    }
+
+    simpleObject.currency = gobberData.currency;
+    simpleObject.mineStartTime = gobberData.mineStartTime;
+    simpleObject.maxAwayMineTime = gobberData.maxAwayMineTime;
+
+
+    return JSON.stringify(simpleObject)
+}
+
+export function decodeGobberData(stringData: string): GobberData {
+    let simpleObject = JSON.parse(stringData);
+    let gobber = new GobberData();
+    gobber.gobberName = simpleObject.gobberName;
+    gobber.mineRate = simpleObject.mineRate;
+    gobber.isMining = simpleObject.isMining;
+
+    for (let i = 0; i < simpleObject.ore.resourceType.length; i++) {
+        gobber.ore.set(simpleObject.ore.resourceType[i], simpleObject.ore.oreInfo[i]);
+    }
+
+    gobber.currency = simpleObject.currency;
+    gobber.mineStartTime = simpleObject.mineStartTime;
+    gobber.maxAwayMineTime = simpleObject.maxAwayMineTime;
+
+    return gobber;
+}
+
 export class OreInfo extends Resource {
     health: number;
     rarityValue: number;
@@ -101,13 +143,13 @@ export class ClipOperator {
     static toString(clipPrice: ClipPrice): string {
         let priceString = "";
         if (clipPrice.shards != 0) {
-            priceString += `${clipPrice.shards}${GobberEmojis.Shard} `
+            priceString += `${clipPrice.shards} ${GobberEmojis.Shard} `
         }
         if (clipPrice.clips != 0) {
-            priceString += `${clipPrice.clips}${GobberEmojis.Clip}`
+            priceString += `${clipPrice.clips} ${GobberEmojis.Clip} `
         }
         if (clipPrice.tats != 0) {
-            priceString += `${clipPrice.tats}${GobberEmojis.Tat}`
+            priceString += `${clipPrice.tats} ${GobberEmojis.Tat} `
         }
         if (clipPrice.pieces != 0) {
             priceString += `${clipPrice.pieces} Pieces`;

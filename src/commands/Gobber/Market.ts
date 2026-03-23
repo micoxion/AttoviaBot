@@ -22,7 +22,7 @@ let userOreSelection: Map<string, ResourceType> = new Map<string, ResourceType>(
 let userAmountSelection: Map<string, number> = new Map<string, number>();
 
 
-function buildMarketContainer(oreSelect: StringSelectMenuBuilder, addButtons: boolean = false, selling: boolean = true, notifText: string | null = null): ContainerBuilder {
+function buildMarketContainer(oreSelect: StringSelectMenuBuilder, addButtons: boolean = false, selling: boolean = true, notifText: string = ""): ContainerBuilder {
     let result = new ContainerBuilder().addSectionComponents(
         section => section
             .addTextDisplayComponents(
@@ -44,25 +44,24 @@ function buildMarketContainer(oreSelect: StringSelectMenuBuilder, addButtons: bo
     if (!addButtons) {
         return result;
     }
-    let buttons: ButtonBuilder[] = []
-    if (selling) {
-        for (let i = 0; i < buttonSuffixes.length; i++) {
-            buttons[i] = new ButtonBuilder()
-                .setCustomId("sell:" + buttonSuffixes[i])
-                .setLabel("Sell " + buttonSuffixes[i])
-                .setStyle(ButtonStyle.Success);
-        }
-    } else {
-        for (let i = 0; i < buttonSuffixes.length; i++) {
-            buttons[i] = new ButtonBuilder()
-                .setCustomId("buy:" + buttonSuffixes[i])
-                .setLabel("Buy " + buttonSuffixes[i])
-                .setStyle(ButtonStyle.Success);
-        }
+    let sellButtons: ButtonBuilder[] = []
+    for (let i = 0; i < buttonSuffixes.length; i++) {
+        sellButtons[i] = new ButtonBuilder()
+            .setCustomId("sell:" + buttonSuffixes[i])
+            .setLabel("Sell " + buttonSuffixes[i])
+            .setStyle(ButtonStyle.Success);
+    }
+    let buyButtons: ButtonBuilder[] = []
+    for (let i = 0; i < buttonSuffixes.length; i++) {
+        buyButtons[i] = new ButtonBuilder()
+            .setCustomId("buy:" + buttonSuffixes[i])
+            .setLabel("Buy " + buttonSuffixes[i])
+            .setStyle(ButtonStyle.Success);
     }
     result.addActionRowComponents(
-        actionRow => actionRow.addComponents(...buttons)
-    )
+        actionRow => actionRow.addComponents(...sellButtons),
+        actionRow => actionRow.addComponents(...buyButtons)
+    );
     // if (notifText) {
     //     result.addTextDisplayComponents(
     //         textComponent => textComponent.setContent(notifText)
@@ -127,7 +126,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
             return;
         }
         let newNotifContainer: ContainerBuilder = new ContainerBuilder();
-        if (interaction.customId === "sell-ore") {
+        /*if (interaction.customId === "sell-ore") {
             // if (selectedAmount > selectedOre.owned) {
             //     selectedAmount = selectedOre.owned;
             // }
@@ -143,21 +142,26 @@ export async function execute(interaction: ChatInputCommandInteraction) {
             //     notifText = `\`\`\`diff\n-# You are missing the following for that purchase: ${result}\n\`\`\``;
             // }
             newNotifContainer = buildMarketContainer(oreSelect, true, false)// notifText);
-        } else if (interaction.customId.startsWith("sell:")) {
+        } else */if (interaction.customId.startsWith("sell:")) {
             let amount = parseInt(interaction.customId.substring(5))
             let sellClipPrice = ClipOperator.multiply(amount, selectedOre.value);
 
             await gobber.addClips(sellClipPrice);
-            newNotifContainer = buildMarketContainer(oreSelect, true, true, `-#\` ${amount} ${selectedOre} sold for ${ClipOperator.toString(sellClipPrice)}. New balance: ${ClipOperator.toString(gobber.gobberData.currency)}\``)
-        } else if (!interaction.customId.startsWith("buy:")) {
+            newNotifContainer = buildMarketContainer(oreSelect, true, true, `\n${amount} ${selectedOre.name} sold for ${ClipOperator.toString(sellClipPrice)}. New balance: ${ClipOperator.toString(gobber.gobberData.currency)}`)
+        } else if (interaction.customId.startsWith("buy:")) {
             let amount = parseInt(interaction.customId.substring(4))
+            //console.log(`Amount: ${amount}, Selected ore val: ${selectedOre.value}`)
             let totalPrice: ClipPrice = ClipOperator.multiply(amount, selectedOre.value);
             let result: ClipPrice | null = await ClipOperator.purchase(gobber, totalPrice);
-            let notifText = `-# ${amount} ${selectedOre} bought for ${ClipOperator.toString(totalPrice)}. New balance ${ClipOperator.toString(gobber.gobberData.currency)}`;
+            let notifText = `\n${amount} ${selectedOre.name} bought for ${ClipOperator.toString(totalPrice)}. New balance ${ClipOperator.toString(gobber.gobberData.currency)}`;
             if (result) {
-                notifText = `\`\`\`diff\n-# You are missing the following for that purchase: ${ClipOperator.toString(result)}\n\`\`\``;
+                //console.log("Result: " + result.shards)
+                notifText = `\`\`\`diff\nYou are missing the following for that purchase:\`\`\` ${ClipOperator.toString(result)}\n`;
             }
             newNotifContainer = buildMarketContainer(oreSelect, true, false, notifText);
+        }
+        else {
+            newNotifContainer = buildMarketContainer(oreSelect, true, true);
         }
         await response.edit({components: [newNotifContainer], flags: MessageFlags.IsComponentsV2});
         await interaction.deleteReply();

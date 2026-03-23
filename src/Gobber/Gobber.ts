@@ -1,12 +1,12 @@
 import { Introspector, MyschemaGobbers } from "kysely-codegen";
-import { ClipOperator, ClipPrice, GobberData, OreInfo, replacer, reviver } from "./GobberData.js";
+import { ClipOperator, ClipPrice, decodeGobberData, encodeGobberData, GobberData, OreInfo, replacer, reviver } from "./GobberData.js";
 import { getGobberById, insertGobber, updateGobber } from "../database/postgres/gobber.js";
 import { CacheType, ChatInputCommandInteraction, ContainerBuilder, Events, Interaction, LabelBuilder, MessageFlags, ModalBuilder, TextInputBuilder, TextInputStyle } from "discord.js";
 import { Resource, ResourceType } from "./GobberTypes/Resources.js";
 import { buildSuccessContainer } from "../commenContainers/Success.js";
 import { createRequire } from 'node:module';
 const require = createRequire(import.meta.url);
-const { ABPictures } = require('../../config.json')
+const { GobberAccent, ABPictures } = require('../../config.json')
 
 
 const defaultData: GobberData = new GobberData()
@@ -25,16 +25,16 @@ export class Gobber implements MyschemaGobbers {
     gobberData: GobberData;
 
     static fromExisting(player: MyschemaGobbers): Gobber {
-        console.log(player.savedata)
+        console.log("From existing: \n" + player.savedata)
         return new this(player.discordid, player.savedata, null);
     }
 
     constructor(discordid: string, savedata: string | null, savedataDecoded: GobberData | null) {
         if (savedata != null) {
-            savedataDecoded = new GobberData(JSON.parse(savedata, reviver) as GobberData);
+            savedataDecoded = decodeGobberData(savedata)//new GobberData(JSON.parse(savedata, reviver) as GobberData);
         }
         else {
-            savedata = JSON.stringify(defaultData, replacer)
+            savedata = encodeGobberData(defaultData)//JSON.stringify(defaultData, replacer)
             savedataDecoded = defaultData;
         }
         this.discordid = discordid;
@@ -57,7 +57,7 @@ export class Gobber implements MyschemaGobbers {
     getUnlockedOre() {
         let response: OreInfo[] = []
         let index = 0
-        console.log(this.gobberData.ore)
+        //console.log(this.gobberData.ore)
         for (const [type, ore] of this.gobberData.ore) {
             if (ore.unlocked) {
                 response[index] = ore;
@@ -97,6 +97,7 @@ export class Gobber implements MyschemaGobbers {
                         .setURL(ABPictures.happy)
                 )
         )
+        .setAccentColor(parseInt(GobberAccent))
     }
 
     async collectMining(): Promise<Map<OreInfo, number>> {
@@ -124,25 +125,29 @@ export class Gobber implements MyschemaGobbers {
                 selectedOreHealth = selectedOre.health
             }
         }
-        for (const [oreInfo, amount] of collected) {
+        /*for (const [oreInfo, amount] of collected) {
             let OreInfo = this.gobberData.ore.get(oreInfo.type)
+            console.log(amount)
+            console.log(JSON.stringify(OreInfo))
             if (OreInfo) {
                 OreInfo.owned += amount;
                 this.gobberData.ore.set(oreInfo.type, OreInfo);
             }
-        }
+        }*/
         await this.updateGobber();
         this.gobberData.isMining = false;
         return collected;
     }
 
     async insertGobber() {
-        this.savedata = JSON.stringify(this.gobberData, replacer);
+        //this.savedata = JSON.stringify(this.gobberData, replacer)
+        this.savedata = encodeGobberData(this.gobberData)
         await insertGobber(this);
     }
 
     async updateGobber() {
-        this.savedata = JSON.stringify(this.gobberData, replacer)
+        //this.savedata = JSON.stringify(this.gobberData, replacer)
+        this.savedata = encodeGobberData(this.gobberData)
         console.log("POST SAVE: \n" + this.savedata)
         await updateGobber(this.discordid, this);
     }
@@ -151,6 +156,14 @@ export class Gobber implements MyschemaGobbers {
         let selectedOre = this.gobberData.ore.get(type);
         if (selectedOre) {
             selectedOre.owned += amount;
+        }
+        await this.updateGobber();
+    }
+
+    async removeOre(type: ResourceType, amount: number) {
+        let selectedOre = this.gobberData.ore.get(type);
+        if (selectedOre) {
+            selectedOre.owned -= amount;
         }
         await this.updateGobber();
     }

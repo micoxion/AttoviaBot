@@ -14,12 +14,10 @@ export let data = new SlashCommandBuilder()
         if (!guild) return;
         for (let i = 0; i < topTen.length; i++) {
             let player = Player.fromExisting(topTen[i])
-            console.log(player.charactername, " : ", player.discordid)
             let member = guild.members.cache.get(player.discordid)
             if (!member) {
                 member = await guild.members.fetch(player.discordid)
             }
-            console.log(member?.user.username, " : ", member?.user.avatarURL())
             let section = new SectionBuilder()
             .addTextDisplayComponents(textDisplay => 
                 textDisplay.setContent(`# ${i + 1} <@${player.discordid}>\n## \`Level ${player.level} | ${player.xp}/${player.xpNeeded(player.level) + player.xp} XP\``)
