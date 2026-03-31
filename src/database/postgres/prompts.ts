@@ -55,6 +55,6 @@ export async function getAllPrompts() {
     return await db
     .selectFrom('myschema.prompts')
     .selectAll()
-    .orderBy("day asc")
+    .orderBy("day", "asc")
     .execute()
 }

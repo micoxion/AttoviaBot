@@ -18,10 +18,15 @@ export async function addToGoodBotCount(amount: number) {
 }
 
 export async function getLastBotCheckin() {
-    return await db
-    .selectFrom('myschema.botstats')
-    .select('lastonline')
-    .executeTakeFirst()
+    try {
+        return await db
+        .selectFrom('myschema.botstats')
+        .select('lastonline')
+        .executeTakeFirst()
+    } catch(error) {
+        console.log(error)
+        return null
+    }
 }
 
 export async function updateLastOnline() {
